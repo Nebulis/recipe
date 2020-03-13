@@ -1,26 +1,44 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import firebase from "firebase";
+import React, { Component } from "react";
+import "./App.css";
+import { UserContext } from "./Connexion/UserContext";
+import { BrowserRouter, Link, Switch, Route } from "react-router-dom";
+import { Add } from "./AddPage/Add";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link bg-red-100"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+interface IAppState {
+  user?: firebase.User;
 }
 
-export default App;
+export class App extends Component<{}, IAppState> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      user: undefined
+    };
+
+    // firebase
+    //   .auth()
+    //   .onAuthStateChanged(user => this.setState({ user: user || undefined }));
+  }
+
+  public render() {
+    return (
+      <BrowserRouter>
+        <UserContext.Provider value={this.state.user}>
+          {/*<Connexion />*/}
+          <header className="h-20 bg-purple-900 text-white">
+            <Link to="/add">Add</Link>
+          </header>
+          <Switch>
+            <Route path="/add">
+              <Add />
+            </Route>
+            <Route>
+              <div>Home</div>
+            </Route>
+          </Switch>
+        </UserContext.Provider>
+      </BrowserRouter>
+    );
+  }
+}
