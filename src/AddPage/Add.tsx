@@ -121,11 +121,17 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   const unitInput = useInput({ value: unit });
 
   useEffect(() => {
-    onIngredientUpdate({
-      name: ingredientInput.value,
-      quantity: quantityInput.value,
-      unit: unitInput.value
-    });
+    if (
+      name !== ingredientInput.value ||
+      quantity !== quantityInput.value ||
+      unit !== unitInput.value
+    ) {
+      onIngredientUpdate({
+        name: ingredientInput.value,
+        quantity: quantityInput.value,
+        unit: unitInput.value
+      });
+    }
   }, [
     ingredientInput.value,
     onIngredientUpdate,
@@ -174,7 +180,9 @@ const Step: React.FunctionComponent<StepProps> = ({
   const stepInput = useInput({ value: step });
 
   useEffect(() => {
-    onStepUpdate(stepInput.value);
+    if (stepInput.value !== step) {
+      onStepUpdate(stepInput.value);
+    }
   }, [onStepUpdate, stepInput.value]);
   return (
     <>
