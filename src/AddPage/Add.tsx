@@ -137,7 +137,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   }, [inputItems, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value]);
   return (
     <>
-      <div className="relative w-full md:w-2/3 px-3 mb-6 md:mb-0" {...getComboboxProps()}>
+      <div className="relative w-full sm:w-2/3 px-3 mb-6 sm:mb-0" {...getComboboxProps()}>
         <div className="">
           <Input
             label="Ingredient"
@@ -166,10 +166,10 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
             ))}
         </div>
       </div>
-      <div className="w-1/2 md:w-1/6 px-3 mb-6 md:mb-0">
+      <div className="w-1/2 sm:w-1/6 px-3 mb-6 sm:mb-0">
         <Input label="Quantity" id={`ingredient-quantity-${ingredientNumber}`} placeholder="4" {...quantityInput} />
       </div>
-      <div className="w-1/2 md:w-1/6 px-3 mb-6 md:mb-0">
+      <div className="w-1/2 sm:w-1/6 px-3 mb-6 sm:mb-0">
         <Select
           label="Unit"
           id={`ingredient-unit-${ingredientNumber}`}
