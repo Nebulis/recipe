@@ -217,6 +217,7 @@ const wait = (timeout: number) => {
 
 export const Add = () => {
   const nameInput = useInput({ value: "" });
+  const caloriesInput = useInput({ value: "" });
   const prepareTimeInput = useInput({ value: "" });
   const cookTimeInput = useInput({ value: "" });
   const restTimeInput = useInput({ value: "" });
@@ -297,13 +298,18 @@ export const Add = () => {
             onChange={event => handleFiles(event.target.files)}
           />
           <div
-            className="pl-3 cursor-pointer w-40 h-40 self-center items-center justify-center flex"
+            className="px-3 cursor-pointer w-40 h-40 self-center items-center justify-center flex"
             onClick={() => fileRef.current && fileRef.current.click()}
           >
             {imageUrl ? <img src={imageUrl} alt="Recipe" /> : <Image className="fill-current w-full h-full" />}
           </div>
-          <div className="flex-grow px-3 justify-center flex flex-col">
-            <Input label="Name" id="name" placeholder="Tiramisu" {...nameInput} />
+          <div className="flex-grow flex">
+            <div className=" w-10/12 px-3 justify-center flex flex-col">
+              <Input label="Name" id="name" placeholder="Tiramisu" {...nameInput} />
+            </div>
+            <div className=" w-2/12 px-3 justify-center flex flex-col">
+              <Input label="Calories" id="calories" placeholder="2500" {...caloriesInput} />
+            </div>
           </div>
         </div>
         <div className="flex flex-wrap mb-6">
@@ -434,6 +440,7 @@ export const Add = () => {
                 cookTime: cookTimeInput.value,
                 restTime: restTimeInput.value,
                 serves: servesInput.value,
+                calories: caloriesInput.value,
                 categories: selectedCategories,
                 createdAt: firestore.FieldValue.serverTimestamp(),
                 imageUrl,
@@ -478,6 +485,8 @@ export const Add = () => {
                   prepareTimeInput.onChange({ target: { value: "" } });
                   cookTimeInput.onChange({ target: { value: "" } });
                   restTimeInput.onChange({ target: { value: "" } });
+                  servesInput.onChange({ target: { value: "" } });
+                  caloriesInput.onChange({ target: { value: "" } });
                   setSelectedCategories([]);
                   setSteps([]);
                   setRecipeIngredients([]);
