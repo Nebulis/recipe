@@ -1,46 +1,45 @@
-import React, {
-  ChangeEvent,
-  InputHTMLAttributes,
-  SelectHTMLAttributes,
-  useEffect,
-  useState
-} from "react";
+import React, { InputHTMLAttributes, SelectHTMLAttributes, useEffect, useRef, useState } from "react";
+import {
+  database,
+  INGREDIENTS_COLLECTION,
+  INGREDIENTS_LIST__COLLECTION,
+  RECIPES_COLLECTION
+} from "../firebase/configuration";
+import { Image, Info, Save, Spinner } from "../icon";
+import { firestore } from "firebase";
+import { useCombobox } from "downshift";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
+type Status = "INITIAL" | "LOADING" | "SUCCESS" | "ERROR";
 
 interface InputProps extends InputHTMLAttributes<any> {
   label: string;
   id: string;
   error?: string;
 }
-const Input: React.FunctionComponent<InputProps> = ({
-  label,
-  id,
-  error,
-  placeholder,
-  ...rest
-}) => {
-  return (
-    <>
-      <label
-        className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-        htmlFor={id}
-      >
-        {label}
-      </label>
-      <input
-        className={`appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white ${
-          error ? "border-red-500" : ""
-        }`}
-        id={id}
-        type="text"
-        placeholder={placeholder}
-        {...rest}
-      />
-      {error && <p className="text-red-500 text-xs italic">${error}</p>}
-    </>
-  );
-};
+
+const Input: React.FunctionComponent<InputProps> = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ label, id, error, placeholder, ...rest }, ref) => {
+    return (
+      <>
+        <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor={id}>
+          {label}
+        </label>
+        <input
+          ref={ref}
+          className={`appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white ${
+            error ? "border-red-500" : ""
+          }`}
+          id={id}
+          type="text"
+          placeholder={placeholder}
+          {...rest}
+        />
+        {error && <p className="text-red-500 text-xs italic">${error}</p>}
+      </>
+    );
+  }
+);
 
 interface SelectProps extends SelectHTMLAttributes<any> {
   label: string;
@@ -48,19 +47,10 @@ interface SelectProps extends SelectHTMLAttributes<any> {
   error?: string;
   options: string[];
 }
-const Select: React.FunctionComponent<SelectProps> = ({
-  label,
-  id,
-  options,
-  onChange,
-  value
-}) => {
+const Select: React.FunctionComponent<SelectProps> = ({ label, id, options, onChange, value }) => {
   return (
     <>
-      <label
-        className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-        htmlFor={id}
-      >
+      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor={id}>
         {label}
       </label>
       <div className="relative">
@@ -75,11 +65,7 @@ const Select: React.FunctionComponent<SelectProps> = ({
           ))}
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-          <svg
-            className="fill-current h-4 w-4"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-          >
+          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
             <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
           </svg>
         </div>
@@ -90,7 +76,8 @@ const Select: React.FunctionComponent<SelectProps> = ({
 
 const useInput = ({ value: initialValue = "" } = {}) => {
   const [value, setValue] = useState(initialValue);
-  const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // not using event type so that can freely call this function manually without typescript complaining
+  const onChange = (event: { target: { value: string } }) => {
     setValue(event.target.value);
   };
   return { value, onChange };
@@ -108,61 +95,82 @@ interface IngredientProps {
   quantity: string;
   unit: string;
   ingredientNumber: number;
+  ingredients: string[];
 }
+
 const Ingredient: React.FunctionComponent<IngredientProps> = ({
   onIngredientUpdate,
   name,
   quantity,
   unit,
-  ingredientNumber
+  ingredientNumber,
+  ingredients
 }) => {
-  const ingredientInput = useInput({ value: name });
+  const [inputItems, setInputItems] = useState(ingredients);
   const quantityInput = useInput({ value: quantity });
   const unitInput = useInput({ value: unit });
 
+  const { isOpen, getMenuProps, getInputProps, getComboboxProps, highlightedIndex, getItemProps } = useCombobox({
+    initialInputValue: name,
+    items: inputItems,
+    onInputValueChange: ({ inputValue = "" }) => {
+      const selection = ingredients
+        .filter(ingredient => ingredient.toLowerCase().includes(inputValue.toLowerCase()))
+        .slice(0, 2);
+      // add the current item if he's not in the list
+      setInputItems(selection.length > 0 ? selection : [inputValue]);
+    }
+  });
+
   useEffect(() => {
     if (
-      name !== ingredientInput.value ||
+      (inputItems.length === 1 && name !== inputItems[0]) ||
       quantity !== quantityInput.value ||
       unit !== unitInput.value
     ) {
       onIngredientUpdate({
-        name: ingredientInput.value,
+        name: inputItems[0],
         quantity: quantityInput.value,
         unit: unitInput.value
       });
     }
-  }, [
-    ingredientInput.value,
-    onIngredientUpdate,
-    quantityInput.value,
-    unitInput.value
-  ]);
+  }, [inputItems, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value]);
   return (
     <>
-      <div className="w-full md:w-2/3 px-3 mb-6 md:mb-0">
-        <Input
-          label="Ingredient"
-          id={`ingredient-name-${ingredientNumber}`}
-          placeholder="Tomato"
-          {...ingredientInput}
-        />
+      <div className="relative w-full md:w-2/3 px-3 mb-6 md:mb-0" {...getComboboxProps()}>
+        <div className="">
+          <Input
+            label="Ingredient"
+            id={`ingredient-name-${ingredientNumber}`}
+            placeholder="Tomato"
+            {...getInputProps()}
+          />
+        </div>
+
+        <div
+          className="w-full overflow-y-auto bg-gray-200 absolute z-50 -mt-3"
+          {...getMenuProps()}
+          style={{ maxHeight: "10rem" }}
+        >
+          {isOpen &&
+            inputItems.map((item, index) => (
+              <div
+                className={`pl-4 py-2 border-b border-gray-400 border-solid ${
+                  highlightedIndex === index ? "bg-purple-700 text-white bold" : ""
+                }`}
+                key={`${item}${index}`}
+                {...getItemProps({ item, index })}
+              >
+                {item}
+              </div>
+            ))}
+        </div>
       </div>
       <div className="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-        <Input
-          label="Quantity"
-          id={`ingredient-quantity-${ingredientNumber}`}
-          placeholder="4"
-          {...quantityInput}
-        />
+        <Input label="Quantity" id={`ingredient-quantity-${ingredientNumber}`} placeholder="4" {...quantityInput} />
       </div>
       <div className="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-        <Select
-          label="Unit"
-          id={`ingredient-unit-${ingredientNumber}`}
-          options={["G", "L"]}
-          {...unitInput}
-        />
+        <Select label="Unit" id={`ingredient-unit-${ingredientNumber}`} options={["G", "L", "P"]} {...unitInput} />
       </div>
     </>
   );
@@ -172,18 +180,14 @@ interface StepProps {
   step: string;
   stepNumber: number;
 }
-const Step: React.FunctionComponent<StepProps> = ({
-  onStepUpdate,
-  step,
-  stepNumber
-}) => {
+const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumber }) => {
   const stepInput = useInput({ value: step });
 
   useEffect(() => {
     if (stepInput.value !== step) {
       onStepUpdate(stepInput.value);
     }
-  }, [onStepUpdate, stepInput.value]);
+  }, [onStepUpdate, step, stepInput.value]);
   return (
     <>
       <div className="w-full px-3 mb-6 md:mb-0">
@@ -199,156 +203,288 @@ const Step: React.FunctionComponent<StepProps> = ({
 };
 
 const initialUnit = "G";
+const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
+const wait = (timeout: number) => {
+  return new Promise(resolve => {
+    setTimeout(() => resolve(), timeout);
+  });
+};
 
-// Photo Ingrédients - Recette
 export const Add = () => {
-  const titleInput = useInput();
-  const prepareTimeInput = useInput();
-  const cookTimeInput = useInput();
-  const restTimeInput = useInput();
+  const nameInput = useInput({ value: "" });
+  const prepareTimeInput = useInput({ value: "" });
+  const cookTimeInput = useInput({ value: "" });
+  const restTimeInput = useInput({ value: "" });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [ingredients, setIngredients] = useState<IngredientType[]>([
-    { name: "", quantity: "", unit: initialUnit }
+  const [recipeIngredients, setRecipeIngredients] = useState<IngredientType[]>([
+    // { name: "Tomato", quantity: "6", unit: initialUnit },
+    // { name: "Apple", quantity: "3", unit: "l" }
   ]);
-  const [steps, setSteps] = useState<string[]>([""]);
+  const [steps, setSteps] = useState<string[]>([]);
+  const [status, setStatus] = useState<Status>("INITIAL");
+  const [ingredients, setIngredients] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File>();
+
+  // use effect to reset correctly steps and ingredients, otherwise if using setSteps([""])
+  // react reuses the first Step component that exists and merge the new value with it
+  // which causes an issue => the previous Step is still available and a second one is created because of onStepUpdate
+  // the same happens with setIngredients
+  useEffect(() => {
+    if (steps.length === 0) {
+      setSteps([""]);
+    }
+  }, [steps]);
+  useEffect(() => {
+    if (recipeIngredients.length === 0) {
+      setRecipeIngredients([{ name: "", quantity: "", unit: initialUnit }]);
+    }
+  }, [recipeIngredients]);
+
+  // handle status
+  useEffect(() => {
+    // hide success bar after 5s
+    if (status === "SUCCESS") {
+      wait(5000).then(() => setStatus("INITIAL"));
+    }
+  }, [status]);
+
+  // load ingredients
+  useEffect(() => {
+    database
+      .collection(INGREDIENTS_LIST__COLLECTION)
+      .get()
+      .then(snapshot => {
+        setIngredients(snapshot.docs.map(ingredient => ingredient.data().name));
+      });
+  }, []);
+
+  const handleFiles = (files: FileList | null) => {
+    if (fileRef.current && files && files.length === 1) {
+      setImageFile(files[0]);
+      setImageUrl(URL.createObjectURL(files[0]));
+    }
+  };
+
   return (
-    <form className="w-full max-w-4xl mx-auto">
-      <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
-        <span className="border-b-2 border-pink-600">General</span>
-      </h1>
-      <div className="flex flex-wrap mb-6">
-        <div className="w-full px-3">
-          <Input
-            label="Title"
-            id="title"
-            placeholder="Tiramisu"
-            {...titleInput}
-          />
+    <>
+      {status === "SUCCESS" && (
+        <div
+          className="flex items-center justify-center bg-green-500 text-white text-sm font-bold px-4 py-3"
+          role="alert"
+        >
+          <Info />
+          <p>Recipe has been added.</p>
         </div>
-      </div>
-      <div className="flex flex-wrap mb-6">
-        <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-          <Input
-            label="Prepare time (minuts)"
-            id="prepare-time"
-            placeholder="45"
-            {...prepareTimeInput}
+      )}
+      <form className="w-full max-w-4xl mx-auto mb-6">
+        <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
+          <span className="border-b-2 border-pink-600">General</span>
+        </h1>
+        <div className="flex flex-wrap mb-6 flex-col md:flex-row">
+          <input
+            accept=".jpg, .jpeg, .png"
+            type="file"
+            ref={fileRef}
+            className="hidden"
+            onChange={event => handleFiles(event.target.files)}
           />
+          <div
+            className="pl-3 cursor-pointer w-40 h-40 self-center items-center justify-center flex"
+            onClick={() => fileRef.current && fileRef.current.click()}
+          >
+            {imageUrl ? <img src={imageUrl} alt="Recipe" /> : <Image className="fill-current w-full h-full" />}
+          </div>
+          <div className="flex-grow px-3 justify-center flex flex-col">
+            <Input label="Name" id="name" placeholder="Tiramisu" {...nameInput} />
+          </div>
         </div>
-        <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-          <Input
-            label="Cook time (minuts)"
-            id="cook-time"
-            placeholder="240"
-            {...cookTimeInput}
-          />
+        <div className="flex flex-wrap mb-6">
+          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+            <Input label="Prepare time (minuts)" id="prepare-time" placeholder="45" {...prepareTimeInput} />
+          </div>
+          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+            <Input label="Cook time (minuts)" id="cook-time" placeholder="240" {...cookTimeInput} />
+          </div>
+          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+            <Input label="Rest time (minuts)" id="rest-time" placeholder="20" {...restTimeInput} />
+          </div>
         </div>
-        <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
-          <Input
-            label="Rest time (minuts)"
-            id="rest-time"
-            placeholder="20"
-            {...restTimeInput}
-          />
+        <div className="flex flex-wrap mb-6 justify-center">
+          {categories.map(category => (
+            <button
+              className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 ${
+                selectedCategories.includes(category)
+                  ? "text-white bg-pink-900 hover:bg-pink-800"
+                  : "hover:bg-purple-700 hover:text-white text-purple-700"
+              }`}
+              key={category}
+              onClick={event => {
+                event.preventDefault();
+                if (selectedCategories.includes(category)) {
+                  setSelectedCategories(selectedCategories.filter(c => c !== category));
+                } else {
+                  setSelectedCategories([...selectedCategories, category]);
+                }
+              }}
+            >
+              {category}
+            </button>
+          ))}
         </div>
-      </div>
-      <div className="flex flex-wrap mb-6 flex justify-center">
-        {categories.map(category => (
+
+        <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
+          <span className="border-b-2 border-pink-600">Ingredients</span>
+        </h1>
+        <div className="flex flex-wrap mb-6 flex justify-center">
+          {recipeIngredients.map((ingredient, index) => {
+            return (
+              <Ingredient
+                key={index}
+                {...ingredient}
+                ingredientNumber={index}
+                ingredients={ingredients}
+                onIngredientUpdate={ingredient => {
+                  // automatically add a new ingredient if a change happen to the last displayed ingredient (which is supposed to be empty)
+                  if (
+                    index === recipeIngredients.length - 1 &&
+                    (ingredient.name || ingredient.quantity || ingredient.unit !== initialUnit)
+                  ) {
+                    setRecipeIngredients([
+                      ...recipeIngredients.slice(0, index),
+                      ingredient,
+                      { name: "", quantity: "", unit: initialUnit }
+                    ]);
+                  } else {
+                    setRecipeIngredients([
+                      ...recipeIngredients.slice(0, index),
+                      ingredient,
+                      ...recipeIngredients.slice(index + 1)
+                    ]);
+                  }
+                }}
+              />
+            );
+          })}
+        </div>
+
+        <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
+          <span className="border-b-2 border-pink-600">Steps</span>
+        </h1>
+        <div className="flex flex-wrap mb-6 flex justify-center">
+          {steps.map((step, index) => {
+            return (
+              <Step
+                key={index}
+                step={step}
+                stepNumber={index + 1}
+                onStepUpdate={step => {
+                  // automatically add a new step if a change happen to the last displayed step (which is supposed to be empty)
+                  if (index === steps.length - 1 && step) {
+                    setSteps([...steps.slice(0, index), step, ""]);
+                  } else {
+                    setSteps([...steps.slice(0, index), step, ...steps.slice(index + 1)]);
+                  }
+                }}
+              />
+            );
+          })}
+        </div>
+        <div className="text-center">
           <button
-            className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 ${
-              selectedCategories.includes(category)
-                ? "text-white bg-pink-900 hover:bg-pink-800"
-                : "hover:bg-purple-700 hover:text-white text-purple-700"
-            }`}
-            key={category}
-            onClick={event => {
+            className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center"
+            onClick={async event => {
               event.preventDefault();
-              if (selectedCategories.includes(category)) {
-                setSelectedCategories(
-                  selectedCategories.filter(c => c !== category)
-                );
-              } else {
-                setSelectedCategories([...selectedCategories, category]);
+              setStatus("LOADING");
+              if (!imageFile) {
+                throw new Error("You forgot the image ...");
               }
+              const data = new FormData();
+              data.append("file", imageFile);
+              const imageUrl = await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload`, {
+                method: "POST",
+                body: data,
+                headers: {
+                  Accept: "application/json"
+                }
+              })
+                .then(res => res.json())
+                .then(res => res.url);
+
+              if (!imageUrl) {
+                throw new Error("The url received from AWS is empty");
+              }
+
+              const timer = wait(2000);
+
+              const recipeId = normalize(nameInput.value);
+              const recipe = {
+                name: nameInput.value,
+                prepareTime: prepareTimeInput.value,
+                cookTime: cookTimeInput.value,
+                restTime: restTimeInput.value,
+                categories: selectedCategories,
+                createdAt: firestore.FieldValue.serverTimestamp(),
+                imageUrl,
+                steps: steps.filter(Boolean) // remove empty steps
+              };
+              const { steps: _, ...recipeForIngredients } = recipe;
+
+              const batch = database.batch();
+              // add the recipe
+              const recipeRef = database.collection(RECIPES_COLLECTION).doc(recipeId);
+              batch.set(recipeRef, recipe);
+
+              recipeIngredients
+                .filter(recipeIngredient => !!recipeIngredient.name) // remove empty ingredients of the recipe
+                .forEach(ingredient => {
+                  const ingredientId = normalize(ingredient.name);
+
+                  // add the ingredients in the recipe
+                  const recipeIngredientRef = recipeRef.collection(INGREDIENTS_COLLECTION).doc(ingredientId);
+                  batch.set(recipeIngredientRef, ingredient);
+
+                  // add the recipe to the ingredient collection
+                  const ingredientRef = database.collection(INGREDIENTS_COLLECTION).doc(ingredientId);
+                  batch.set(
+                    ingredientRef,
+                    { name: ingredient.name, [recipeId]: recipeForIngredients },
+                    { merge: true }
+                  );
+
+                  // add the ingredient
+                  const ingredientListRef = database.collection(INGREDIENTS_LIST__COLLECTION).doc(ingredientId);
+                  batch.set(ingredientListRef, { name: ingredient.name });
+                });
+              batch
+                .commit()
+                .then(() => {
+                  // make sure it takes at least 2 seconds so that the waiting time is somehow fixed
+                  return timer;
+                })
+                .then(_ => {
+                  nameInput.onChange({ target: { value: "" } });
+                  prepareTimeInput.onChange({ target: { value: "" } });
+                  cookTimeInput.onChange({ target: { value: "" } });
+                  restTimeInput.onChange({ target: { value: "" } });
+                  setSelectedCategories([]);
+                  setSteps([]);
+                  setRecipeIngredients([]);
+                  setStatus("SUCCESS");
+                  setImageUrl("");
+                  setImageFile(undefined);
+                  if (fileRef.current) {
+                    fileRef.current.value = "";
+                  }
+                });
             }}
           >
-            {category}
+            {status === "LOADING" ? <Spinner className="fill-current w-4 h-4 mr-2 fa-spin" /> : <Save />}
+            Add Recipe
           </button>
-        ))}
-      </div>
-
-      <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
-        <span className="border-b-2 border-pink-600">Ingredients</span>
-      </h1>
-      <div className="flex flex-wrap mb-6 flex justify-center">
-        {ingredients.map((ingredient, index) => {
-          return (
-            <Ingredient
-              key={index}
-              {...ingredient}
-              ingredientNumber={index}
-              onIngredientUpdate={ingredient => {
-                // automatically add a new ingredient if a change happen to the last displayed ingredient (which is supposed to be empty)
-                if (
-                  index === ingredients.length - 1 &&
-                  (ingredient.name ||
-                    ingredient.quantity ||
-                    ingredient.unit !== initialUnit)
-                ) {
-                  setIngredients([
-                    ...ingredients.slice(0, index),
-                    ingredient,
-                    { name: "", quantity: "", unit: initialUnit }
-                  ]);
-                } else {
-                  setIngredients([
-                    ...ingredients.slice(0, index),
-                    ingredient,
-                    ...ingredients.slice(index + 1)
-                  ]);
-                }
-              }}
-            />
-          );
-        })}
-      </div>
-
-      <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
-        <span className="border-b-2 border-pink-600">Steps</span>
-      </h1>
-      <div className="flex flex-wrap mb-6 flex justify-center">
-        {steps.map((step, index) => {
-          return (
-            <Step
-              key={index}
-              step={step}
-              stepNumber={index + 1}
-              onStepUpdate={step => {
-                // automatically add a new step if a change happen to the last displayed step (which is supposed to be empty)
-                if (index === steps.length - 1 && step) {
-                  setSteps([...steps.slice(0, index), step, ""]);
-                } else {
-                  setSteps([
-                    ...steps.slice(0, index),
-                    step,
-                    ...steps.slice(index + 1)
-                  ]);
-                }
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/*<button*/}
-      {/*  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full"*/}
-      {/*  onClick={event => {*/}
-      {/*    event.preventDefault();*/}
-      {/*    console.log(ingredients);*/}
-      {/*  }}*/}
-      {/*>*/}
-      {/*  Button*/}
-      {/*</button>*/}
-    </form>
+        </div>
+      </form>
+    </>
   );
 };
