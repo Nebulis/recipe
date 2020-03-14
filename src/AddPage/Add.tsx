@@ -166,11 +166,16 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
             ))}
         </div>
       </div>
-      <div className="w-full md:w-1/6 px-3 mb-6 md:mb-0">
+      <div className="w-1/2 md:w-1/6 px-3 mb-6 md:mb-0">
         <Input label="Quantity" id={`ingredient-quantity-${ingredientNumber}`} placeholder="4" {...quantityInput} />
       </div>
-      <div className="w-full md:w-1/6 px-3 mb-6 md:mb-0">
-        <Select label="Unit" id={`ingredient-unit-${ingredientNumber}`} options={["G", "L", "P"]} {...unitInput} />
+      <div className="w-1/2 md:w-1/6 px-3 mb-6 md:mb-0">
+        <Select
+          label="Unit"
+          id={`ingredient-unit-${ingredientNumber}`}
+          options={["Gramme", "Litre", "Piece"]}
+          {...unitInput}
+        />
       </div>
     </>
   );
@@ -202,7 +207,7 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
   );
 };
 
-const initialUnit = "G";
+const initialUnit = "Gramme";
 const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
 const wait = (timeout: number) => {
   return new Promise(resolve => {
@@ -215,6 +220,7 @@ export const Add = () => {
   const prepareTimeInput = useInput({ value: "" });
   const cookTimeInput = useInput({ value: "" });
   const restTimeInput = useInput({ value: "" });
+  const servesInput = useInput({ value: "" });
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [recipeIngredients, setRecipeIngredients] = useState<IngredientType[]>([
     // { name: "Tomato", quantity: "6", unit: initialUnit },
@@ -301,14 +307,17 @@ export const Add = () => {
           </div>
         </div>
         <div className="flex flex-wrap mb-6">
-          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
             <Input label="Prepare time (minuts)" id="prepare-time" placeholder="45" {...prepareTimeInput} />
           </div>
-          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
             <Input label="Cook time (minuts)" id="cook-time" placeholder="240" {...cookTimeInput} />
           </div>
-          <div className="w-full md:w-1/3 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
             <Input label="Rest time (minuts)" id="rest-time" placeholder="20" {...restTimeInput} />
+          </div>
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
+            <Input label="Serves" id="serves" placeholder="2" {...servesInput} />
           </div>
         </div>
         <div className="flex flex-wrap mb-6 justify-center">
@@ -424,6 +433,7 @@ export const Add = () => {
                 prepareTime: prepareTimeInput.value,
                 cookTime: cookTimeInput.value,
                 restTime: restTimeInput.value,
+                serves: servesInput.value,
                 categories: selectedCategories,
                 createdAt: firestore.FieldValue.serverTimestamp(),
                 imageUrl,
