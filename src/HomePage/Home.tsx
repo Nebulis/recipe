@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Bolt, Clock, Oven, Pause, User } from "../icon";
+import { Bolt, Clock, Oven, Pause, Spinner, User } from "../icon";
 import { Link } from "react-router-dom";
-import { Recipe } from "../type";
-import { transformTime } from "../utils";
-import {database, RECIPES_COLLECTION} from '../firebase/configuration';
+import { Recipe, Status } from "../type";
+import { transformTime, wait } from "../utils";
+import { database, RECIPES_COLLECTION } from "../firebase/configuration";
 
 interface RecipeCardProps extends Recipe {
   name: string;
@@ -67,6 +67,7 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
 };
 
 export const Home: React.FunctionComponent = () => {
+  const [status, setStatus] = useState<Status>("LOADING");
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
     //   calories: 511,
@@ -90,6 +91,7 @@ export const Home: React.FunctionComponent = () => {
   // console.log(JSON.stringify(recipes));
 
   useEffect(() => {
+    const timer = wait(1000);
     database
       .collection(RECIPES_COLLECTION)
       .orderBy("name")
@@ -106,13 +108,25 @@ export const Home: React.FunctionComponent = () => {
             };
           })
         );
+      })
+      .then(() => timer)
+      .then(() => {
+        setStatus("SUCCESS")
       });
   }, []);
   return (
-    <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
-      {recipes.map(recipe => (
-        <RecipeCard {...recipe} key={recipe.id} />
-      ))}
-    </div>
+    <>
+      {status === "SUCCESS" ? (
+        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
+          {recipes.map(recipe => (
+            <RecipeCard {...recipe} key={recipe.id} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center mb-6 mt-6 ">
+          <Spinner className="fill-current w-16 h-16 fa-spin mx-auto" />
+        </div>
+      )}
+    </>
   );
 };

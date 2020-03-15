@@ -37,7 +37,7 @@ export const Recipe: React.FunctionComponent = () => {
   // }
 
   useEffect(() => {
-    const timer = wait(2000);
+    const timer = wait(1000);
     Promise.all([
       database
         .collection(RECIPES_COLLECTION)
