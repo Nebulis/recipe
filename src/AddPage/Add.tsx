@@ -8,9 +8,10 @@ import {
 import { Image, Info, Save, Spinner } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
+import { Status } from "../type";
+import {wait} from '../utils';
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
-type Status = "INITIAL" | "LOADING" | "SUCCESS" | "ERROR";
 
 interface InputProps extends InputHTMLAttributes<any> {
   label: string;
@@ -209,12 +210,6 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
 
 const initialUnit = "Gramme";
 const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
-const wait = (timeout: number) => {
-  return new Promise(resolve => {
-    setTimeout(() => resolve(), timeout);
-  });
-};
-
 export const Add = () => {
   const nameInput = useInput({ value: "" });
   const caloriesInput = useInput({ value: "" });

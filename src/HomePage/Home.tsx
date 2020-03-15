@@ -1,25 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { database, RECIPES_COLLECTION } from "../firebase/configuration";
-import { Clock, Oven, Pause, User, Bolt } from "../icon";
+import { Bolt, Clock, Oven, Pause, User } from "../icon";
 import { Link } from "react-router-dom";
-
-interface Recipe {
-  id: string;
-  name: string;
-  imageUrl: string;
-  categories: string[];
-  cookTime: number;
-  prepareTime: number;
-  restTime: number;
-  serves: number;
-  calories: number;
-  createdAt: any;
-  steps: string[];
-}
-
-const transformTime = (time: number) => {
-  return time ? `${time} mins` : "-";
-};
+import { Recipe } from "../type";
+import { transformTime } from "../utils";
+import {database, RECIPES_COLLECTION} from '../firebase/configuration';
 
 interface RecipeCardProps extends Recipe {
   name: string;
@@ -83,7 +67,27 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
 };
 
 export const Home: React.FunctionComponent = () => {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([
+    // {
+    //   calories: 511,
+    //   categories: ["Midi", "Soir"],
+    //   cookTime: 20,
+    //   createdAt: 1212,
+    //   imageUrl: "https://recipe-lma.s3.ap-southeast-1.amazonaws.com/46805ef1-e3da-4b10-a182-7b019c917a18",
+    //   name: "Escalope de dinde grillée et fondue de poireau à la moutarde",
+    //   prepareTime: 20,
+    //   restTime: 0,
+    //   serves: 2,
+    //   steps: [
+    //     "Portez à ébullition une casserole d’eau et faites cuire les tagliatelle 12 à 14 min pour des pâtes al dente ou fondantes.",
+    //     "Dans une sauteuse, faites chauffer un filet d'huile d'olive à feu moyen à vif. Pelez et émincez l'échalote et le poireau. Faites les revenir 7 min jusqu'à ce qu'ils soient tendres. Salez, poivrez. A mi-cuisson, ajoutez un fond d'eau et couvrez pour accélérer la cuisson. En fin de cuisson, s'il reste un peu d'eau, mettez sur feu vif pour la faire évaporer.",
+    //     "Ajoutez le fromage frais et la moutarde. Mélangez bien.",
+    //     "Faites cuire les escalopes de dinde. "
+    //   ],
+    //   id: "escalope-de-dinde-grillée-et-fondue-de-poireau-à-la-moutarde"
+    // }
+  ]);
+  // console.log(JSON.stringify(recipes));
 
   useEffect(() => {
     database

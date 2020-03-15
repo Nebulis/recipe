@@ -4,6 +4,7 @@ import { UserContext } from "./Connexion/UserContext";
 import { BrowserRouter, NavLink, Route, Switch } from "react-router-dom";
 import { Add } from "./AddPage/Add";
 import { Home } from "./HomePage/Home";
+import { Recipe } from "./RecipePage/Recipe";
 
 interface IAppState {
   user?: firebase.User;
@@ -54,6 +55,9 @@ export class App extends Component<{}, IAppState> {
           <Switch>
             <Route path="/add">
               <Add />
+            </Route>
+            <Route path="/recipe/:id">
+              <Recipe />
             </Route>
             <Route>
               <Home />
