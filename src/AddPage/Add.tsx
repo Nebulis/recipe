@@ -436,11 +436,11 @@ export const Add = () => {
               const recipeId = normalize(nameInput.value);
               const recipe = {
                 name: nameInput.value,
-                prepareTime: prepareTimeInput.value,
-                cookTime: cookTimeInput.value,
-                restTime: restTimeInput.value,
-                serves: servesInput.value,
-                calories: caloriesInput.value,
+                prepareTime: Number(prepareTimeInput.value),
+                cookTime: Number(cookTimeInput.value),
+                restTime: Number(restTimeInput.value),
+                serves: Number(servesInput.value),
+                calories: Number(caloriesInput.value),
                 categories: selectedCategories,
                 createdAt: firestore.FieldValue.serverTimestamp(),
                 imageUrl,
@@ -455,6 +455,13 @@ export const Add = () => {
 
               recipeIngredients
                 .filter(recipeIngredient => !!recipeIngredient.name) // remove empty ingredients of the recipe
+                .map(({ name, unit, quantity }) => {
+                  return {
+                    name,
+                    unit,
+                    quantity: Number(quantity)
+                  };
+                })
                 .forEach(ingredient => {
                   const ingredientId = normalize(ingredient.name);
 
