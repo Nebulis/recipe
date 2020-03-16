@@ -22,9 +22,9 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
   return (
     <Link
       to={`/recipe/${id}`}
-      className="mx-auto max-w-sm rounded overflow-hidden shadow-lg hover:shadow-2xl transition duration-150 ease-in transform hover:scale-105 flex flex-col"
+      className="w-full mx-auto max-w-sm rounded overflow-hidden shadow-lg hover:shadow-2xl transition duration-150 ease-in transform hover:scale-105 flex flex-col"
     >
-      <img className="w-full" src={imageUrl} alt="Sunset in the mountains" />
+      <img className="w-full object-cover h-48" src={imageUrl} alt="recipe" />
       <div className="px-6 py-4">
         <div className="font-bold text-xl mb-2 text-center">{name}</div>
       </div>
@@ -55,7 +55,7 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
           return (
             <span
               key={category}
-              className="inline-block bg-pink-600 rounded-full px-3 py-1 text-sm font-semibold text-white mr-2"
+              className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2"
             >
               {category}
             </span>
