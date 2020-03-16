@@ -55,7 +55,7 @@ interface SelectProps extends SelectHTMLAttributes<any> {
 const Select: React.FunctionComponent<SelectProps> = ({ label, id, options, onChange, value }) => {
   return (
     <>
-      <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor={id}>
+      <label className="inline-flex uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor={id}>
         {label}
       </label>
       <div className="relative">
@@ -127,11 +127,15 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
     onInputValueChange: ({ inputValue = "" }) => {
       const selection = ingredients
         .filter(ingredient => ingredient.toLowerCase().includes(inputValue.toLowerCase()))
-        .slice(0, 2);
+        .slice(0, 20);
       // add the current item if he's not in the list
       setInputItems(selection.length > 0 ? selection : [inputValue]);
     }
   });
+
+  useEffect(() => {
+    setInputItems(ingredients);
+  }, [ingredients]);
 
   useEffect(() => {
     if (
@@ -149,7 +153,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   }, [inputItems, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value, id]);
   return (
     <>
-      <div className="relative w-full sm:w-2/3 px-3 mb-6 sm:mb-0" {...getComboboxProps()}>
+      <div className="relative w-full sm:pr-0 sm:w-2/3 mb-6 sm:mb-0" {...getComboboxProps()}>
         <div className="">
           <Input
             label={
@@ -178,14 +182,14 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
         </div>
 
         <div
-          className="w-full overflow-y-auto bg-gray-200 absolute z-50 -mt-3"
+          className="w-full overflow-y-auto bg-gray-400 absolute z-50 -mt-3"
           {...getMenuProps()}
           style={{ maxHeight: "10rem" }}
         >
           {isOpen &&
             inputItems.map((item, index) => (
               <div
-                className={`pl-4 py-2 border-b border-gray-400 border-solid ${
+                className={`pl-4 py-2 border-b border-gray-100 border-solid ${
                   highlightedIndex === index ? "bg-purple-700 text-white bold" : ""
                 }`}
                 key={`${item}${index}`}
@@ -196,10 +200,10 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
             ))}
         </div>
       </div>
-      <div className="w-1/2 sm:w-1/6 px-3 mb-6 sm:mb-0">
+      <div className="w-1/2 sm:w-1/6 pl-0 pr-3 sm:pl-6 sm:pr-3 mb-6 sm:mb-0">
         <Input label="Quantity" id={`ingredient-quantity-${ingredientNumber}`} placeholder="4" {...quantityInput} />
       </div>
-      <div className="w-1/2 sm:w-1/6 px-3 mb-6 sm:mb-0">
+      <div className="w-1/2 sm:w-1/6 pl-3 pr-0 mb-6 sm:mb-0">
         <Select
           label="Unit"
           id={`ingredient-unit-${ingredientNumber}`}
@@ -396,7 +400,7 @@ export const Add = () => {
         <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
           <span className="border-b-2 border-pink-600">Ingredients</span>
         </h1>
-        <div className="flex flex-wrap mb-6 flex justify-center">
+        <div className="flex flex-wrap mb-6 flex justify-center px-3 sm:pr-3">
           {recipeIngredients.map((ingredient, index) => {
             return (
               <Ingredient
