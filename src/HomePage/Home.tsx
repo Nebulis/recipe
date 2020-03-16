@@ -98,7 +98,6 @@ export const Home: React.FunctionComponent = () => {
       .limit(20)
       .get()
       .then(snapshot => {
-        console.log(snapshot.docs);
         setRecipes(
           // @ts-ignore
           snapshot.docs.map(recipe => {

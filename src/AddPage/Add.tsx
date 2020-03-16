@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, SelectHTMLAttributes, useEffect, useRef, useState } from "react";
+import React, { InputHTMLAttributes, SelectHTMLAttributes, useContext, useEffect, useRef, useState } from "react";
 import {
   database,
   INGREDIENTS_COLLECTION,
@@ -10,6 +10,7 @@ import { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { Status } from "../type";
 import { wait } from "../utils";
+import { IngredientContext } from "../IngredientProvider";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
 
@@ -101,7 +102,6 @@ interface IngredientProps {
   unit: string;
   id: string;
   ingredientNumber: number;
-  ingredients: string[];
   deleteIngredient: () => void;
   addIngredient: () => void;
 }
@@ -113,10 +113,10 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   unit,
   id,
   ingredientNumber,
-  ingredients,
   deleteIngredient,
   addIngredient
 }) => {
+  const { ingredients } = useContext(IngredientContext);
   const [inputItems, setInputItems] = useState(ingredients);
   const quantityInput = useInput({ value: quantity });
   const unitInput = useInput({ value: unit });
@@ -283,10 +283,10 @@ export const Add = () => {
   ]);
   const [steps, setSteps] = useState<StepType[]>([]);
   const [status, setStatus] = useState<Status>("INITIAL");
-  const [ingredients, setIngredients] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File>();
+  const { refresh } = useContext(IngredientContext);
 
   // use effect to reset correctly steps and ingredients, otherwise if using setSteps([""])
   // react reuses the first Step component that exists and merge the new value with it
@@ -310,16 +310,6 @@ export const Add = () => {
       wait(5000).then(() => setStatus("INITIAL"));
     }
   }, [status]);
-
-  // load ingredients
-  useEffect(() => {
-    database
-      .collection(INGREDIENTS_LIST__COLLECTION)
-      .get()
-      .then(snapshot => {
-        setIngredients(snapshot.docs.map(ingredient => ingredient.data().name));
-      });
-  }, []);
 
   const handleFiles = (files: FileList | null) => {
     if (fileRef.current && files && files.length === 1) {
@@ -413,7 +403,6 @@ export const Add = () => {
                 key={ingredient.id}
                 {...ingredient}
                 ingredientNumber={index}
-                ingredients={ingredients}
                 addIngredient={() => {
                   setRecipeIngredients([
                     ...recipeIngredients.slice(0, index + 1),
@@ -558,6 +547,7 @@ export const Add = () => {
                   return timer;
                 })
                 .then(_ => {
+                  refresh();
                   nameInput.onChange({ target: { value: "" } });
                   prepareTimeInput.onChange({ target: { value: "" } });
                   cookTimeInput.onChange({ target: { value: "" } });
