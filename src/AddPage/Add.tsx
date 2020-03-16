@@ -88,6 +88,7 @@ const useInput = ({ value: initialValue = "" } = {}) => {
 };
 
 interface IngredientType {
+  id: string;
   name: string;
   quantity: string;
   unit: string;
@@ -98,8 +99,11 @@ interface IngredientProps {
   name: string;
   quantity: string;
   unit: string;
+  id: string;
   ingredientNumber: number;
   ingredients: string[];
+  deleteIngredient: () => void;
+  addIngredient: () => void;
 }
 
 const Ingredient: React.FunctionComponent<IngredientProps> = ({
@@ -107,8 +111,11 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   name,
   quantity,
   unit,
+  id,
   ingredientNumber,
-  ingredients
+  ingredients,
+  deleteIngredient,
+  addIngredient
 }) => {
   const [inputItems, setInputItems] = useState(ingredients);
   const quantityInput = useInput({ value: quantity });
@@ -133,18 +140,37 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
       unit !== unitInput.value
     ) {
       onIngredientUpdate({
+        id,
         name: inputItems[0],
         quantity: quantityInput.value,
         unit: unitInput.value
       });
     }
-  }, [inputItems, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value]);
+  }, [inputItems, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value, id]);
   return (
     <>
       <div className="relative w-full sm:w-2/3 px-3 mb-6 sm:mb-0" {...getComboboxProps()}>
         <div className="">
           <Input
-            label="Ingredient"
+            label={
+              <>
+                Ingredient
+                <Plus
+                  className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
+                  onClick={event => {
+                    event.preventDefault();
+                    addIngredient();
+                  }}
+                />
+                <Times
+                  className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
+                  onClick={event => {
+                    event.preventDefault();
+                    deleteIngredient();
+                  }}
+                />
+              </>
+            }
             id={`ingredient-name-${ingredientNumber}`}
             placeholder="Tomato"
             {...getInputProps()}
@@ -185,8 +211,9 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   );
 };
 
+const createRandomId = () => `${Date.now()}-${Math.random() * 100000000 + 1}`;
 const createStep = (): StepType => ({
-  id: `${Date.now()}-${Math.random() * 100000000 + 1}`,
+  id: createRandomId(),
   step: ""
 });
 interface StepType {
@@ -272,7 +299,7 @@ export const Add = () => {
   }, [steps]);
   useEffect(() => {
     if (recipeIngredients.length === 0) {
-      setRecipeIngredients([{ name: "", quantity: "", unit: initialUnit }]);
+      setRecipeIngredients([{ name: "", quantity: "", unit: initialUnit, id: createRandomId() }]);
     }
   }, [recipeIngredients]);
 
@@ -383,10 +410,20 @@ export const Add = () => {
           {recipeIngredients.map((ingredient, index) => {
             return (
               <Ingredient
-                key={index}
+                key={ingredient.id}
                 {...ingredient}
                 ingredientNumber={index}
                 ingredients={ingredients}
+                addIngredient={() => {
+                  setRecipeIngredients([
+                    ...recipeIngredients.slice(0, index + 1),
+                    { id: createRandomId(), name: "", quantity: "", unit: initialUnit },
+                    ...recipeIngredients.slice(index + 1)
+                  ]);
+                }}
+                deleteIngredient={() => {
+                  setRecipeIngredients([...recipeIngredients.slice(0, index), ...recipeIngredients.slice(index + 1)]);
+                }}
                 onIngredientUpdate={ingredient => {
                   // automatically add a new ingredient if a change happen to the last displayed ingredient (which is supposed to be empty)
                   if (
@@ -396,7 +433,7 @@ export const Add = () => {
                     setRecipeIngredients([
                       ...recipeIngredients.slice(0, index),
                       ingredient,
-                      { name: "", quantity: "", unit: initialUnit }
+                      { id: createRandomId(), name: "", quantity: "", unit: initialUnit }
                     ]);
                   } else {
                     setRecipeIngredients([
