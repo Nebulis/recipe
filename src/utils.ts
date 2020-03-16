@@ -13,10 +13,10 @@ export const transformUnit = (quantity: number, unit: string) => {
   return `${quantity}`;
 };
 
-export const wait = (timeout: number) => {
+export const wait = (timeout: number): Promise<number> => {
   return new Promise(resolve => {
     setTimeout(() => {
-      resolve();
+      resolve(timeout);
     }, timeout);
   });
 };

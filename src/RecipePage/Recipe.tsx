@@ -1,14 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
-import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Bolt, Clock, Oven, Pause, Spinner, User } from "../icon";
 import { transformTime, transformUnit, wait } from "../utils";
+import { RecipeContext } from "../RecipeProvider";
 
 export const Recipe: React.FunctionComponent = () => {
   const params = useParams<{ id: string }>();
-  const [recipe, setRecipe] = useState<RecipeWithIngredient>();
-  const [status, setStatus] = useState<Status>("LOADING");
+  const { loadRecipe, getRecipe } = useContext(RecipeContext);
+  const [recipe, setRecipe] = useState<RecipeWithIngredient | undefined>(getRecipe(params.id));
+  const [status, setStatus] = useState<Status>(recipe ? "SUCCESS" : "LOADING");
   //   {
   //   id: "escalope-de-dinde-grillée-et-fondue-de-poireau-à-la-moutarde",
   //   calories: 511,
@@ -37,35 +38,14 @@ export const Recipe: React.FunctionComponent = () => {
   // }
 
   useEffect(() => {
-    const timer = wait(1000);
-    Promise.all([
-      database
-        .collection(RECIPES_COLLECTION)
-        .doc(params.id)
-        .get(),
-      database
-        .collection(RECIPES_COLLECTION)
-        .doc(params.id)
-        .collection(INGREDIENTS_COLLECTION)
-        .get(),
-      timer
-    ]).then(([recipeSnapshot, ingredientsSnapshot]) => {
-      setRecipe({
-        // @ts-ignore
-        id: recipeSnapshot.id,
-        // @ts-ignore
-        ...recipeSnapshot.data(),
-        // @ts-ignore
-        ingredients: ingredientsSnapshot.docs.map(ingredient => {
-          return {
-            id: ingredient.id,
-            ...ingredient.data()
-          };
-        })
+    if (!recipe) {
+      const timer = wait(1000);
+      Promise.all([loadRecipe(params.id), timer]).then(([recipe]) => {
+        setRecipe(recipe);
+        setStatus("SUCCESS");
       });
-      setStatus("SUCCESS");
-    });
-  }, [params]);
+    }
+  }, [getRecipe, loadRecipe, params.id, recipe]);
 
   return (
     <>
@@ -75,7 +55,7 @@ export const Recipe: React.FunctionComponent = () => {
             <span className="border-b-2 border-pink-600">{recipe.name}</span>
           </h1>
           <div className="mb-6">
-            <img src={recipe.imageUrl} className="h-64 w-full object-cover" />
+            <img src={recipe.imageUrl} className="h-64 w-full object-cover" alt="recipe" />
           </div>
           <div className="bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 flex">
             <div className="w-1/5 flex flex-col items-center">
