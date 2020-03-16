@@ -7,6 +7,8 @@ export const transformUnit = (quantity: number, unit: string) => {
     return `${quantity}g`;
   } else if (unit === "Litre") {
     return `${quantity}l`;
+  } else if (unit === "Milliitre") {
+    return `${quantity}ml`;
   }
   return `${quantity}`;
 };
