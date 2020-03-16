@@ -5,16 +5,16 @@ import {
   INGREDIENTS_LIST__COLLECTION,
   RECIPES_COLLECTION
 } from "../firebase/configuration";
-import { Image, Info, Save, Spinner } from "../icon";
+import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { Status } from "../type";
-import {wait} from '../utils';
+import { wait } from "../utils";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
 
 interface InputProps extends InputHTMLAttributes<any> {
-  label: string;
+  label: React.ReactNode;
   id: string;
   error?: string;
 }
@@ -23,7 +23,10 @@ const Input: React.FunctionComponent<InputProps> = React.forwardRef<HTMLInputEle
   ({ label, id, error, placeholder, ...rest }, ref) => {
     return (
       <>
-        <label className="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" htmlFor={id}>
+        <label
+          className="inline-flex items-center uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
+          htmlFor={id}
+        >
           {label}
         </label>
         <input
@@ -181,25 +184,54 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
     </>
   );
 };
-interface StepProps {
-  onStepUpdate: (step: string) => void;
+
+const createStep = (): StepType => ({
+  id: `${Date.now()}-${Math.random() * 100000000 + 1}`,
+  step: ""
+});
+interface StepType {
+  id: string;
   step: string;
+}
+interface StepProps {
+  onStepUpdate: (step: StepType) => void;
+  addStep: () => void;
+  deleteStep: () => void;
+  step: StepType;
   stepNumber: number;
 }
-const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumber }) => {
-  const stepInput = useInput({ value: step });
+const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumber, addStep, deleteStep }) => {
+  const stepInput = useInput({ value: step.step });
 
   useEffect(() => {
-    if (stepInput.value !== step) {
-      onStepUpdate(stepInput.value);
+    if (stepInput.value !== step.step) {
+      onStepUpdate({ step: stepInput.value, id: step.id });
     }
-  }, [onStepUpdate, step, stepInput.value]);
+  }, [onStepUpdate, step.step, step.id, stepInput.value]);
   return (
     <>
       <div className="w-full px-3 mb-6 md:mb-0">
         <Input
-          label={`Step ${stepNumber}`}
-          id={`step-${stepNumber}`}
+          label={
+            <>
+              Step {stepNumber}{" "}
+              <Plus
+                className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
+                onClick={event => {
+                  event.preventDefault();
+                  addStep();
+                }}
+              />
+              <Times
+                className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
+                onClick={event => {
+                  event.preventDefault();
+                  deleteStep();
+                }}
+              />
+            </>
+          }
+          id={step.id}
           placeholder="Fold whipped cream into mascarpone cream mixture.."
           {...stepInput}
         />
@@ -222,7 +254,7 @@ export const Add = () => {
     // { name: "Tomato", quantity: "6", unit: initialUnit },
     // { name: "Apple", quantity: "3", unit: "l" }
   ]);
-  const [steps, setSteps] = useState<string[]>([]);
+  const [steps, setSteps] = useState<StepType[]>([]);
   const [status, setStatus] = useState<Status>("INITIAL");
   const [ingredients, setIngredients] = useState<string[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -235,7 +267,7 @@ export const Add = () => {
   // the same happens with setIngredients
   useEffect(() => {
     if (steps.length === 0) {
-      setSteps([""]);
+      setSteps([createStep()]);
     }
   }, [steps]);
   useEffect(() => {
@@ -386,13 +418,19 @@ export const Add = () => {
           {steps.map((step, index) => {
             return (
               <Step
-                key={index}
+                key={step.id}
                 step={step}
                 stepNumber={index + 1}
+                addStep={() => {
+                  setSteps([...steps.slice(0, index + 1), createStep(), ...steps.slice(index + 1)]);
+                }}
+                deleteStep={() => {
+                  setSteps([...steps.slice(0, index), ...steps.slice(index + 1)]);
+                }}
                 onStepUpdate={step => {
                   // automatically add a new step if a change happen to the last displayed step (which is supposed to be empty)
                   if (index === steps.length - 1 && step) {
-                    setSteps([...steps.slice(0, index), step, ""]);
+                    setSteps([...steps.slice(0, index), step, createStep()]);
                   } else {
                     setSteps([...steps.slice(0, index), step, ...steps.slice(index + 1)]);
                   }
@@ -439,7 +477,7 @@ export const Add = () => {
                 categories: selectedCategories,
                 createdAt: firestore.FieldValue.serverTimestamp(),
                 imageUrl,
-                steps: steps.filter(Boolean) // remove empty steps
+                steps: steps.map(step => step.step).filter(Boolean) // remove empty steps
               };
               const { steps: _, ...recipeForIngredients } = recipe;
 

@@ -148,3 +148,47 @@ export const Bolt: FunctionComponent<{ className?: string }> = ({ className = "f
     />
   </svg>
 );
+
+export const Plus: FunctionComponent<{
+  className?: string;
+  onClick?: (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;
+}> = ({ className = "fill-current w-4 h-4 mr-2", onClick = () => void 0 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="plus"
+    className={className}
+    role="img"
+    viewBox="0 0 448 512"
+    onClick={onClick}
+  >
+    <path
+      fill="currentColor"
+      d="M416 208H272V64c0-17.67-14.33-32-32-32h-32c-17.67 0-32 14.33-32 32v144H32c-17.67 0-32 14.33-32 32v32c0 17.67 14.33 32 32 32h144v144c0 17.67 14.33 32 32 32h32c17.67 0 32-14.33 32-32V304h144c17.67 0 32-14.33 32-32v-32c0-17.67-14.33-32-32-32z"
+    />
+  </svg>
+);
+
+export const Times: FunctionComponent<{
+  className?: string;
+  onClick?: (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;
+}> = ({ className = "fill-current w-4 h-4 mr-2", onClick = () => void 0 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="times"
+    className={className}
+    role="img"
+    viewBox="0 0 352 512"
+    onClick={onClick}
+  >
+    <path
+      fill="currentColor"
+      d="M242.72 256l100.07-100.07c12.28-12.28 12.28-32.19 0-44.48l-22.24-22.24c-12.28-12.28-32.19-12.28-44.48 0L176 189.28 75.93 89.21c-12.28-12.28-32.19-12.28-44.48 0L9.21 111.45c-12.28 12.28-12.28 32.19 0 44.48L109.28 256 9.21 356.07c-12.28 12.28-12.28 32.19 0 44.48l22.24 22.24c12.28 12.28 32.2 12.28 44.48 0L176 322.72l100.07 100.07c12.28 12.28 32.2 12.28 44.48 0l22.24-22.24c12.28-12.28 12.28-32.19 0-44.48L242.72 256z"
+    />
+  </svg>
+);
