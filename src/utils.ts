@@ -5,12 +5,14 @@ export const transformTime = (time: number) => {
 export const transformUnit = (quantity: number, unit: string) => {
   if (unit === "Gramme") {
     return `${quantity}g`;
-  } else if (unit === "Kilogramme") {
+  } else if (unit === "Kg") {
     return `${quantity}kg`;
   } else if (unit === "Litre") {
     return `${quantity}l`;
-  } else if (unit === "Milliitre") {
+  } else if (unit === "Ml") {
     return `${quantity}ml`;
+  } else if (unit === "Cl") {
+    return `${quantity}cl`;
   } else if (unit === "C. à Soupe") {
     return `${quantity} C. à Soupe`;
   } else if (unit === "C. à Café") {
