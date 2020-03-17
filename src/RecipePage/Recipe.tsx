@@ -1,41 +1,71 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { FunctionComponent, useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
-import { Bolt, Clock, Oven, Pause, Spinner, User } from "../icon";
+import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
 import { transformTime, transformUnit, wait } from "../utils";
 import { RecipeContext } from "../RecipeProvider";
+import { Input, useInput } from "../Common/Input";
+
+const EditableInput: FunctionComponent<{
+  edit: boolean;
+  id: string;
+  value: string;
+  displayedValue?: string;
+  className?: string;
+  onUpdate: (value: string) => Promise<any>;
+}> = ({ id, edit, className = "", value, displayedValue, onUpdate }) => {
+  const [displayInput, setDisplayInput] = useState(false);
+
+  const [status, setStatus] = useState<Status>("INITIAL");
+  const inputValue = useInput({ value });
+  return displayInput ? (
+    <div className="text-left flex">
+      <Input
+        id={id}
+        {...inputValue}
+        autoFocus
+        onKeyUp={async event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            setStatus("LOADING");
+            await Promise.all([onUpdate(inputValue.value), wait(500)]);
+            setDisplayInput(false);
+            setStatus("SUCCESS");
+          }
+        }}
+        inputClassName="appearance-none block w-full bg-white text-gray-700 border rounded-l py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+      />
+      <button
+        className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded-r border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center mb-3"
+        onClick={async event => {
+          event.preventDefault();
+          setStatus("LOADING");
+          await Promise.all([onUpdate(inputValue.value), wait(500)]);
+          setDisplayInput(false);
+          setStatus("SUCCESS");
+        }}
+      >
+        {status === "LOADING" ? <Spinner className="w-6 h-6 fa-spin" /> : <Save className="w-6 h-6" />}
+      </button>
+    </div>
+  ) : (
+    <span
+      onClick={() => {
+        setDisplayInput(true);
+      }}
+      className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}
+    >
+      {displayedValue || value}
+    </span>
+  );
+};
 
 export const Recipe: React.FunctionComponent = () => {
   const params = useParams<{ id: string }>();
-  const { loadRecipe, getRecipe } = useContext(RecipeContext);
+  const { loadRecipe, getRecipe, updateRecipe } = useContext(RecipeContext);
+  const [edit, setEdit] = useState(false);
   const [recipe, setRecipe] = useState<RecipeWithIngredient | undefined>(getRecipe(params.id));
   const [status, setStatus] = useState<Status>(recipe ? "SUCCESS" : "LOADING");
-  //   {
-  //   id: "escalope-de-dinde-grillée-et-fondue-de-poireau-à-la-moutarde",
-  //   calories: 511,
-  //   categories: ["Midi", "Soir"],
-  //   cookTime: 20,
-  //   createdAt: { seconds: 1584201505, nanoseconds: 101000000 },
-  //   imageUrl: "https://recipe-lma.s3.ap-southeast-1.amazonaws.com/46805ef1-e3da-4b10-a182-7b019c917a18",
-  //   name: "Escalope de dinde grillée et fondue de poireau à la moutarde",
-  //   prepareTime: 20,
-  //   restTime: 0,
-  //   serves: 2,
-  //   steps: [
-  //     "Portez à ébullition une casserole d’eau et faites cuire les tagliatelle 12 à 14 min pour des pâtes al dente ou fondantes.",
-  //     "Dans une sauteuse, faites chauffer un filet d'huile d'olive à feu moyen à vif. Pelez et émincez l'échalote et le poireau. Faites les revenir 7 min jusqu'à ce qu'ils soient tendres. Salez, poivrez. A mi-cuisson, ajoutez un fond d'eau et couvrez pour accélérer la cuisson. En fin de cuisson, s'il reste un peu d'eau, mettez sur feu vif pour la faire évaporer.",
-  //     "Ajoutez le fromage frais et la moutarde. Mélangez bien.",
-  //     "Faites cuire les escalopes de dinde. "
-  //   ],
-  //   ingredients: [
-  //     { id: "escalopes-de-dinde", name: "Escalopes de dinde", quantity: 2, unit: "Piece" },
-  //     { id: "fromage-frais", name: "Fromage frais", quantity: 100, unit: "Gramme" },
-  //     { id: "moutarde", name: "Moutarde", quantity: 15, unit: "Gramme" },
-  //     { id: "poireau", name: "Poireau", quantity: 1, unit: "Piece" },
-  //     { id: "tagliatelle", name: "Tagliatelle", quantity: 150, unit: "Gramme" },
-  //     { id: "échalote", name: "Échalote", quantity: 1, unit: "Piece" }
-  //   ]
-  // }
 
   useEffect(() => {
     if (!recipe) {
@@ -51,32 +81,105 @@ export const Recipe: React.FunctionComponent = () => {
     <>
       {status === "SUCCESS" && recipe ? (
         <div className="w-full flex flex-col mx-auto mb-6 px-4 lg:w-10/12 lg:px-0">
-          <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6">
-            <span className="border-b-2 border-pink-600">{recipe.name}</span>
+          <h1 className="text-center uppercase mt-2 text-xl text-pink-600 mb-6 relative">
+            <EditableInput
+              id="recipe-name"
+              edit={edit}
+              value={recipe.name}
+              className="border-b-2 border-pink-600"
+              onUpdate={value => {
+                return updateRecipe(params.id, { name: value }).then(recipe => {
+                  setRecipe(recipe);
+                });
+              }}
+            />
+            {edit ? (
+              <LockOpen
+                className="absolute w-6 h-6 text-black right-0 top-0 mt-1 cursor-pointer"
+                onClick={() => {
+                  setEdit(false);
+                }}
+              />
+            ) : (
+              <Lock
+                className="absolute w-6 h-6 text-black right-0 top-0 mt-1 cursor-pointer"
+                onClick={() => {
+                  setEdit(true);
+                }}
+              />
+            )}
           </h1>
           <div className="mb-6">
             <img src={recipe.imageUrl} className="h-64 w-full object-cover" alt="recipe" />
           </div>
           <div className="bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 flex">
             <div className="w-1/5 flex flex-col items-center">
-              <User className="fill-current w-4 h-4" />
-              {recipe.serves}
+              <User className="fill-current w-4 h-4 mb-1" />
+              <EditableInput
+                id="recipe-serves"
+                edit={edit}
+                value={String(recipe.serves)}
+                onUpdate={value => {
+                  return updateRecipe(params.id, { serves: Number(value) }).then(recipe => {
+                    setRecipe(recipe);
+                  });
+                }}
+              />
             </div>
             <div className="w-1/5 flex flex-col items-center">
-              <Clock className="fill-current w-4 h-4" />
-              {transformTime(recipe.prepareTime)}
+              <Clock className="fill-current w-4 h-4 mb-1" />
+              <EditableInput
+                id="recipe-prepareTime"
+                edit={edit}
+                value={String(recipe.prepareTime)}
+                displayedValue={transformTime(recipe.prepareTime)}
+                onUpdate={value => {
+                  return updateRecipe(params.id, { prepareTime: Number(value) }).then(recipe => {
+                    setRecipe(recipe);
+                  });
+                }}
+              />
             </div>
             <div className="w-1/5 flex flex-col items-center">
-              <Oven className="fill-current w-4 h-4" />
-              {transformTime(recipe.cookTime)}
+              <Oven className="fill-current w-4 h-4 mb-1" />
+              <EditableInput
+                id="recipe-cookTime"
+                edit={edit}
+                value={String(recipe.cookTime)}
+                displayedValue={transformTime(recipe.cookTime)}
+                onUpdate={value => {
+                  return updateRecipe(params.id, { cookTime: Number(value) }).then(recipe => {
+                    setRecipe(recipe);
+                  });
+                }}
+              />
             </div>
             <div className="w-1/5 flex flex-col items-center">
-              <Pause className="fill-current w-4 h-4" />
-              {transformTime(recipe.restTime)}
+              <Pause className="fill-current w-4 h-4 mb-1" />
+              <EditableInput
+                id="recipe-restTime"
+                edit={edit}
+                value={String(recipe.restTime)}
+                displayedValue={transformTime(recipe.restTime)}
+                onUpdate={value => {
+                  return updateRecipe(params.id, { restTime: Number(value) }).then(recipe => {
+                    setRecipe(recipe);
+                  });
+                }}
+              />
             </div>
             <div className="w-1/5 flex flex-col items-center">
-              <Bolt className="fill-current w-4 h-4" />
-              {recipe.calories}
+              <Bolt className="fill-current w-4 h-4 mb-1" />
+              <EditableInput
+                id="recipe-calories"
+                edit={edit}
+                value={String(recipe.calories)}
+                onUpdate={value => {
+                  return updateRecipe(params.id, { calories: Number(value) }).then(recipe => {
+                    setRecipe(recipe);
+                  });
+                }}
+              />
             </div>
           </div>
           <div className="flex w-full flex-col md:flex-row">

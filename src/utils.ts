@@ -6,7 +6,7 @@ export const transformTime = (time: number) => {
     const minuts = time % 60;
     return `${hours}h${minuts || ""}`;
   }
-  return time ? `${time} mins` : "-";
+  return time ? `${time}mins` : "-";
 };
 
 export const units: Unit[] = ["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece"];

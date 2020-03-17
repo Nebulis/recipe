@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, SelectHTMLAttributes, useContext, useEffect, useRef, useState } from "react";
+import React, { SelectHTMLAttributes, useContext, useEffect, useRef, useState } from "react";
 import {
   database,
   INGREDIENTS_COLLECTION,
@@ -11,40 +11,9 @@ import { useCombobox } from "downshift";
 import { Status } from "../type";
 import { units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
+import {Input, useInput} from "../Common/Input";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
-
-interface InputProps extends InputHTMLAttributes<any> {
-  label: React.ReactNode;
-  id: string;
-  error?: string;
-}
-
-const Input: React.FunctionComponent<InputProps> = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, id, error, placeholder, ...rest }, ref) => {
-    return (
-      <>
-        <label
-          className="inline-flex items-center uppercase tracking-wide text-gray-700 text-xs font-bold mb-2"
-          htmlFor={id}
-        >
-          {label}
-        </label>
-        <input
-          ref={ref}
-          className={`appearance-none block w-full bg-gray-200 text-gray-700 border rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white ${
-            error ? "border-red-500" : ""
-          }`}
-          id={id}
-          type="text"
-          placeholder={placeholder}
-          {...rest}
-        />
-        {error && <p className="text-red-500 text-xs italic">${error}</p>}
-      </>
-    );
-  }
-);
 
 interface SelectProps extends SelectHTMLAttributes<any> {
   label: string;
@@ -77,15 +46,6 @@ const Select: React.FunctionComponent<SelectProps> = ({ label, id, options, onCh
       </div>
     </>
   );
-};
-
-const useInput = ({ value: initialValue = "" } = {}) => {
-  const [value, setValue] = useState(initialValue);
-  // not using event type so that can freely call this function manually without typescript complaining
-  const onChange = (event: { target: { value: string } }) => {
-    setValue(event.target.value);
-  };
-  return { value, onChange };
 };
 
 interface IngredientType {
