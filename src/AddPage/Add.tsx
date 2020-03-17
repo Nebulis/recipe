@@ -207,7 +207,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
         <Select
           label="Unit"
           id={`ingredient-unit-${ingredientNumber}`}
-          options={["Gramme", "Litre", "Millilitre", "Piece"]}
+          options={["Gramme", "Kilogramme", "Litre", "Millilitre", "C. à Soupe", "C. à Café", "Piece"]}
           {...unitInput}
         />
       </div>
