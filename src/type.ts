@@ -16,7 +16,7 @@ export interface RecipeIngredient {
   id: string;
   name: string;
   quantity: number;
-  unit: string;
+  unit: Unit;
 }
 
 export interface RecipeWithIngredient extends Recipe {
@@ -24,3 +24,5 @@ export interface RecipeWithIngredient extends Recipe {
 }
 
 export type Status = "INITIAL" | "LOADING" | "SUCCESS" | "ERROR";
+
+export type Unit = "Gramme" | "Kg" | "Litre" | "Cl" | "Ml" | "C. à Soupe" | "C. à Café" | "Piece";

@@ -1,8 +1,12 @@
+import {Unit} from './type';
+
 export const transformTime = (time: number) => {
   return time ? `${time} mins` : "-";
 };
 
-export const transformUnit = (quantity: number, unit: string) => {
+export const units: Unit[] = ["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece"];
+
+export const transformUnit = (quantity: number, unit: Unit) => {
   if (unit === "Gramme") {
     return `${quantity}g`;
   } else if (unit === "Kg") {

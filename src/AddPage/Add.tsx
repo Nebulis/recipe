@@ -9,7 +9,7 @@ import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { Status } from "../type";
-import { wait } from "../utils";
+import { units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
@@ -204,12 +204,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
         <Input label="Quantity" id={`ingredient-quantity-${ingredientNumber}`} placeholder="4" {...quantityInput} />
       </div>
       <div className="w-1/2 sm:w-1/6 pl-3 pr-0 mb-6 sm:mb-0">
-        <Select
-          label="Unit"
-          id={`ingredient-unit-${ingredientNumber}`}
-          options={["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece"]}
-          {...unitInput}
-        />
+        <Select label="Unit" id={`ingredient-unit-${ingredientNumber}`} options={units} {...unitInput} />
       </div>
     </>
   );
