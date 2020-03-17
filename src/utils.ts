@@ -1,6 +1,11 @@
-import {Unit} from './type';
+import { Unit } from "./type";
 
 export const transformTime = (time: number) => {
+  if (time > 60) {
+    const hours = Math.floor(time / 60);
+    const minuts = time % 60;
+    return `${hours}h${minuts || ""}`;
+  }
   return time ? `${time} mins` : "-";
 };
 
