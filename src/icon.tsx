@@ -194,6 +194,7 @@ export const Times: FunctionComponent<{
 );
 
 //https://aydos.com/svgedit/
+//https://codesandbox.io/s/kind-archimedes-d9g6p
 export const Lock: FunctionComponent<{
   className?: string;
   onClick?: (event: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;

@@ -200,7 +200,21 @@ export const Recipe: React.FunctionComponent = () => {
                       {index + 1}
                     </span>
                   </div>
-                  <div>{step}</div>
+                  <div className="flex-grow">
+                    <EditableInput
+                      id={`step-${index}`}
+                      edit={edit}
+                      value={step}
+                      className="inline-block w-full"
+                      onUpdate={value => {
+                        return updateRecipe(params.id, {
+                          steps: [...recipe.steps.slice(0, index), value, ...recipe.steps.slice(index + 1)]
+                        }).then(recipe => {
+                          setRecipe(recipe);
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
