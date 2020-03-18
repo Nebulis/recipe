@@ -23,6 +23,6 @@ export interface RecipeWithIngredient extends Recipe {
   ingredients: RecipeIngredient[];
 }
 
-export type Status = "INITIAL" | "LOADING" | "SUCCESS" | "ERROR";
+export type Status = "INITIAL" | "LOADING" | "SUCCESS" | "ERROR" | "FINISHED";
 
 export type Unit = "Gramme" | "Kg" | "Litre" | "Cl" | "Ml" | "C. à Soupe" | "C. à Café" | "Piece";

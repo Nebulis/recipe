@@ -67,7 +67,9 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
 };
 
 export const Home: React.FunctionComponent = () => {
-  const [status, setStatus] = useState<Status>("LOADING");
+  const [status, setStatus] = useState<Status>("INITIAL");
+  const [paginate, setPaginate] = useState("");
+  const LIMIT = 20;
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
     //   calories: 511,
@@ -91,39 +93,63 @@ export const Home: React.FunctionComponent = () => {
   // console.log(JSON.stringify(recipes));
 
   useEffect(() => {
-    const timer = wait(1000);
-    database
-      .collection(RECIPES_COLLECTION)
-      .orderBy("name")
-      .limit(20)
-      .get()
-      .then(snapshot => {
-        setRecipes(
-          // @ts-ignore
-          snapshot.docs.map(recipe => {
-            return {
-              ...recipe.data(),
-              id: recipe.id
-            };
-          })
-        );
+    setStatus("LOADING");
+    Promise.all([
+      database
+        .collection(RECIPES_COLLECTION)
+        .orderBy("name")
+        .startAfter(paginate)
+        .limit(LIMIT)
+        .get(),
+      wait(1500)
+    ])
+      .then(([snapshot]) => {
+        setRecipes(recipes => {
+          return [
+            ...recipes,
+            ...snapshot.docs.map(recipe => {
+              return {
+                ...recipe.data(),
+                id: recipe.id
+              } as Recipe;
+            })
+          ];
+        });
+        return snapshot.docs.length;
       })
-      .then(() => timer)
-      .then(() => {
-        setStatus("SUCCESS")
+      .then(length => {
+        if (length === LIMIT) {
+          setStatus("SUCCESS");
+        } else {
+          setStatus("FINISHED");
+        }
       });
-  }, []);
+  }, [paginate]);
   return (
     <>
-      {status === "SUCCESS" ? (
-        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
-          {recipes.map(recipe => (
-            <RecipeCard {...recipe} key={recipe.id} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center mb-6 mt-6 ">
-          <Spinner className="fill-current w-16 h-16 fa-spin mx-auto" />
+      <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
+        {recipes.map(recipe => (
+          <RecipeCard {...recipe} key={recipe.id} />
+        ))}
+      </div>
+      {status !== "FINISHED" && (
+        <div className="text-center mb-6">
+          <button
+            className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center"
+            onClick={() => {
+              setPaginate(recipes[recipes.length - 1].name);
+            }}
+            disabled={status === ("LOADING" as Status)}
+          >
+            {status === ("LOADING" as Status) ? (
+              <>
+                <Spinner className="w-6 h-6 fa-spin mr-2" />
+                Loading
+              </>
+            ) : (
+              "Load More"
+            )}
+          </button>
         </div>
       )}
     </>
