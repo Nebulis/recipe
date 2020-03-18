@@ -3,9 +3,12 @@ import { database, INGREDIENTS_LIST__COLLECTION } from "./firebase/configuration
 
 interface IngredientContextType {
   ingredients: string[];
-  refresh: () => void;
+  refresh: () => Promise<any>;
 }
-export const IngredientContext = React.createContext<IngredientContextType>({ ingredients: [], refresh: () => void 0 });
+export const IngredientContext = React.createContext<IngredientContextType>({
+  ingredients: [],
+  refresh: () => Promise.resolve()
+});
 
 export const IngredientProvider: React.FunctionComponent = ({ children }) => {
   const [ingredients, setIngredients] = useState<string[]>([]);
@@ -21,7 +24,7 @@ export const IngredientProvider: React.FunctionComponent = ({ children }) => {
   }, []);
 
   const refresh = useCallback(() => {
-    database
+    return database
       .collection(INGREDIENTS_LIST__COLLECTION)
       .get()
       .then(snapshot => {

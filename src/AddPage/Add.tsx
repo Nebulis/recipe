@@ -11,7 +11,8 @@ import { useCombobox } from "downshift";
 import { Status } from "../type";
 import { units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
-import {Input, useInput} from "../Common/Input";
+import { Input, useInput } from "../Common/Input";
+import { useHistory } from "react-router-dom";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
 
@@ -246,6 +247,7 @@ export const Add = () => {
   const [imageUrl, setImageUrl] = useState("");
   const [imageFile, setImageFile] = useState<File>();
   const { refresh } = useContext(IngredientContext);
+  const { push } = useHistory();
 
   // use effect to reset correctly steps and ingredients, otherwise if using setSteps([""])
   // react reuses the first Step component that exists and merge the new value with it
@@ -505,8 +507,9 @@ export const Add = () => {
                   // make sure it takes at least 2 seconds so that the waiting time is somehow fixed
                   return timer;
                 })
-                .then(_ => {
-                  refresh();
+                .then(async _ => {
+                  await refresh();
+                  setStatus("SUCCESS");
                   nameInput.onChange({ target: { value: "" } });
                   prepareTimeInput.onChange({ target: { value: "" } });
                   cookTimeInput.onChange({ target: { value: "" } });
@@ -516,12 +519,13 @@ export const Add = () => {
                   setSelectedCategories([]);
                   setSteps([]);
                   setRecipeIngredients([]);
-                  setStatus("SUCCESS");
                   setImageUrl("");
                   setImageFile(undefined);
                   if (fileRef.current) {
                     fileRef.current.value = "";
                   }
+                  await wait(700);
+                  push(`/recipe/${recipeId}`);
                 });
             }}
           >
