@@ -1,8 +1,8 @@
 import React, { useCallback, useState } from "react";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "./firebase/configuration";
-import { Recipe, RecipeWithIngredient } from "./type";
+import { Recipe, RecipeIngredient, RecipeWithIngredient } from "./type";
 
-const initialRecipes: { [key: string]: RecipeWithIngredient } ={}
+const initialRecipes: { [key: string]: RecipeWithIngredient } = {};
 //   {
 //   "carbonade-flamande": {
 //     id: "carbonade-flamande",
@@ -45,7 +45,12 @@ const initialRecipes: { [key: string]: RecipeWithIngredient } ={}
 interface RecipeContextType {
   loadRecipe: (id: string) => Promise<RecipeWithIngredient>;
   getRecipe: (id: string) => RecipeWithIngredient | undefined;
-  updateRecipe: (id: string, recipe: Partial<Recipe>) => Promise<RecipeWithIngredient>;
+  updateRecipe: <T extends keyof Recipe>(
+    id: string,
+    key: T,
+    value: Recipe[T],
+    ingredients: RecipeIngredient[]
+  ) => Promise<RecipeWithIngredient>;
 }
 export const RecipeContext = React.createContext<RecipeContextType>({
   getRecipe: () => {
@@ -65,20 +70,22 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
 
   const getRecipe = useCallback((id: string) => recipes[id], [recipes]);
   const updateRecipe = useCallback(
-    (id: string, recipe: Partial<Recipe>) => {
-      return database
-        .collection(RECIPES_COLLECTION)
-        .doc(id)
-        .update(recipe)
-        .then(() => {
-          const newRecipe = {
-            ...recipes[id],
-            ...recipe
-          };
+    (id: string, key: string, value: any, ingredients: RecipeIngredient[]) => {
+      const batch = database.batch();
+      batch.update(database.collection(RECIPES_COLLECTION).doc(id), { [key]: value });
 
-          setRecipes({ ...recipes, [id]: newRecipe });
-          return newRecipe;
-        });
+      ingredients.forEach(ingredient => {
+        batch.update(database.collection(INGREDIENTS_COLLECTION).doc(ingredient.id), { [`${id}.${key}`]: value });
+      });
+      return batch.commit().then(() => {
+        const newRecipe = {
+          ...recipes[id],
+          [key]: value
+        };
+
+        setRecipes({ ...recipes, [id]: newRecipe });
+        return newRecipe;
+      });
     },
     [recipes]
   );
