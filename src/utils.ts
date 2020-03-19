@@ -37,3 +37,21 @@ export const wait = (timeout: number): Promise<number> => {
     }, timeout);
   });
 };
+
+export const generateSearch = (value: string): string[] => {
+  return value
+    .toLowerCase()
+    .normalize("NFD") // https://stackoverflow.com/questions/990904/remove-accents-diacritics-in-a-string-in-javascript
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z ]/g, "") // keep letter and spaces
+    .split(" ")
+    .filter(word => word.length > 2)
+    .map(word => { // generate search words, we generate only for starting words
+      const words = [];
+      for (let i = 3; i <= word.length; i++) {
+        words.push(word.substring(0, i));
+      }
+      return words;
+    })
+    .flat();
+};

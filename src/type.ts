@@ -9,8 +9,10 @@ export interface Recipe {
   serves: number;
   calories: number;
   createdAt: any;
+  search: string[];
   steps: string[];
 }
+export type NewRecipe = Omit<Recipe, "id">;
 
 export interface RecipeIngredient {
   id: string;

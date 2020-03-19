@@ -8,8 +8,8 @@ import {
 import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
-import { Status } from "../type";
-import { units, wait } from "../utils";
+import { NewRecipe, Status } from "../type";
+import { generateSearch, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
@@ -458,7 +458,7 @@ export const Add = () => {
               const timer = wait(2000);
 
               const recipeId = normalize(nameInput.value);
-              const recipe = {
+              const recipe: NewRecipe = {
                 name: nameInput.value,
                 prepareTime: Number(prepareTimeInput.value),
                 cookTime: Number(cookTimeInput.value),
@@ -467,10 +467,11 @@ export const Add = () => {
                 calories: Number(caloriesInput.value),
                 categories: selectedCategories,
                 createdAt: firestore.FieldValue.serverTimestamp(),
+                search: generateSearch(nameInput.value),
                 imageUrl,
                 steps: steps.map(step => step.step).filter(Boolean) // remove empty steps
               };
-              const { steps: _, ...recipeForIngredients } = recipe;
+              const { steps: _, search: _2, ...recipeForIngredients } = recipe;
 
               const batch = database.batch();
               // add the recipe
