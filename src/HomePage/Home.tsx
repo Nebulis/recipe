@@ -1,10 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Bolt, Clock, Oven, Pause, Search, Spinner, User } from "../icon";
+import React, { useCallback, useContext, useEffect, useState } from "react";
+import { Bolt, Clock, Info, Oven, Pause, Plus, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
 import { transformTime, wait } from "../utils";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
-import { Input } from "../Common/Input";
+import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
 import { useCombobox } from "downshift";
 
@@ -71,9 +71,9 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
 
 export const Home: React.FunctionComponent = () => {
   const [status, setStatus] = useState<Status>("INITIAL");
+  const [searchType, setSearchType] = useState<"BY_TITLE" | "BY_INGREDIENT">("BY_TITLE");
   const [paginate, setPaginate] = useState("");
   const [runSearch, setRunSearch] = useState(true);
-  // const nameInput = useInput();
   const LIMIT = 20;
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
@@ -96,12 +96,14 @@ export const Home: React.FunctionComponent = () => {
     // }
   ]);
   // console.log(JSON.stringify(recipes));
+  const nameInput = useInput();
 
-  const search = () => {
+  const search = useCallback(() => {
+    if (status === "LOADING") return;
     setRecipes([]);
     setPaginate("");
     setRunSearch(true);
-  };
+  }, [status]);
 
   const { ingredients } = useContext(IngredientContext);
   const [inputItems, setInputItems] = useState(ingredients);
@@ -129,10 +131,12 @@ export const Home: React.FunctionComponent = () => {
   useEffect(() => {
     if (!runSearch) return;
     setStatus("LOADING");
-    const getRecipeFromRecipes = () =>
-      database
-        .collection(RECIPES_COLLECTION)
-        .orderBy("name")
+    const getRecipeFromRecipes = () => {
+      let ref = database.collection(RECIPES_COLLECTION).orderBy("name");
+      if (nameInput.value) {
+        ref = ref.where("search", "array-contains", nameInput.value.toLowerCase());
+      }
+      return ref
         .startAfter(paginate)
         .limit(LIMIT)
         .get()
@@ -144,6 +148,7 @@ export const Home: React.FunctionComponent = () => {
             } as Recipe;
           });
         });
+    };
 
     const getRecipeFromIngredients = () =>
       database
@@ -160,7 +165,10 @@ export const Home: React.FunctionComponent = () => {
           return recipes;
         });
 
-    Promise.all([searchIngredient ? getRecipeFromIngredients() : getRecipeFromRecipes(), wait(1500)])
+    Promise.all([
+      searchType === "BY_INGREDIENT" && searchIngredient ? getRecipeFromIngredients() : getRecipeFromRecipes(),
+      wait(1500)
+    ])
       .then(([fetchedRecipes]) => {
         setRecipes(recipes => {
           return [...recipes, ...fetchedRecipes];
@@ -175,48 +183,86 @@ export const Home: React.FunctionComponent = () => {
           setStatus("FINISHED");
         }
       });
-  }, [paginate, runSearch, searchIngredient]);
+  }, [paginate, runSearch, searchIngredient, searchType, nameInput.value]);
   return (
     <>
-      <div className="mb-6 mt-3 flex justify-center">
-        <div className="w-1/5 relative" {...getComboboxProps()}>
-          {/*<Input id="search-by-name" {...nameInput} label="Name" placeholder="Name" />*/}
-          <div className="">
+      <div className="mb-3 mt-3 flex justify-center">
+        {searchType === "BY_INGREDIENT" ? (
+          <div className="w-1/5 relative" {...getComboboxProps()}>
+            {/*<Input id="search-by-name" {...nameInput} label="Name" placeholder="Name" />*/}
+            <div className="">
+              <Input
+                label={
+                  <>
+                    Ingredient
+                    <Sync
+                      className="fill-current w-3 h-3 inline-block text-purple-500 ml-1 cursor-pointer"
+                      onClick={() => {
+                        setSearchType("BY_TITLE");
+                      }}
+                    />
+                  </>
+                }
+                id={`search-by-ingredient`}
+                placeholder="Tomato"
+                {...getInputProps()}
+                onKeyUp={async event => {
+                  if (event.key === "Enter") {
+                    closeMenu();
+                    search();
+                  }
+                }}
+              />
+            </div>
+            <div
+              className="w-full overflow-y-auto bg-gray-400 absolute z-50 -mt-3"
+              {...getMenuProps()}
+              style={{ maxHeight: "10rem" }}
+            >
+              {isOpen &&
+                inputItems.map((item, index) => (
+                  <div
+                    className={`pl-4 py-2 border-b border-gray-100 border-solid ${
+                      highlightedIndex === index ? "bg-purple-700 text-white bold" : ""
+                    }`}
+                    key={`${item}${index}`}
+                    {...getItemProps({ item, index })}
+                  >
+                    {item}
+                  </div>
+                ))}
+            </div>
+          </div>
+        ) : (
+          <div>
             <Input
-              label="Ingredient"
-              id={`search-by-ingredient`}
-              placeholder="Tomato"
-              {...getInputProps()}
+              label={
+                <>
+                  Name
+                  <Sync
+                    className="fill-current w-3 h-3 inline-block text-purple-500 ml-1 cursor-pointer"
+                    onClick={() => {
+                      setSearchType("BY_INGREDIENT");
+                    }}
+                  />
+                </>
+              }
+              id={`search-by-name`}
+              placeholder="Tiramisu"
+              {...nameInput}
               onKeyUp={async event => {
                 if (event.key === "Enter") {
-                  closeMenu();
                   search();
                 }
               }}
             />
           </div>
-          <div
-            className="w-full overflow-y-auto bg-gray-400 absolute z-50 -mt-3"
-            {...getMenuProps()}
-            style={{ maxHeight: "10rem" }}
-          >
-            {isOpen &&
-              inputItems.map((item, index) => (
-                <div
-                  className={`pl-4 py-2 border-b border-gray-100 border-solid ${
-                    highlightedIndex === index ? "bg-purple-700 text-white bold" : ""
-                  }`}
-                  key={`${item}${index}`}
-                  {...getItemProps({ item, index })}
-                >
-                  {item}
-                </div>
-              ))}
-          </div>
-        </div>
+        )}
         <div className="flex items-end">
           <button
-            className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center mb-3"
+            className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center mb-3 ${
+              status === "LOADING" ? "opacity-50" : ""
+            }`}
             style={{ height: "46px" }}
             onClick={() => {
               search();
@@ -237,15 +283,28 @@ export const Home: React.FunctionComponent = () => {
           </button>
         </div>
       </div>
-      <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
-        {recipes.map(recipe => (
-          <RecipeCard {...recipe} key={recipe.id} />
-        ))}
-      </div>
-      {status !== "FINISHED" && (
+      {recipes.length > 0 && (
+        <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
+          {recipes.map(recipe => (
+            <RecipeCard {...recipe} key={recipe.id} />
+          ))}
+        </div>
+      )}
+      {status !== "LOADING" && recipes.length === 0 && (
+        <div
+          className="flex items-center justify-center bg-orange-500 text-white text-sm font-bold px-4 py-3 mb-6"
+          role="alert"
+        >
+          <Info />
+          <p>No recipe found.</p>
+        </div>
+      )}
+      {status !== "FINISHED" && recipes.length > 0 && (
         <div className="text-center mb-6">
           <button
-            className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center"
+            className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center ${
+              status === "LOADING" ? "opacity-50" : ""
+            }`}
             onClick={() => {
               setPaginate(recipes[recipes.length - 1].name);
               setRunSearch(true);
