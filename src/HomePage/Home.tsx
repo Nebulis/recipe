@@ -230,7 +230,7 @@ export const Home: React.FunctionComponent = () => {
               </>
             ) : (
               <>
-                <Search className="w-6 h-6 fa-spin mr-2" />
+                <Search className="w-6 h-6 mr-2" />
                 Search
               </>
             )}
