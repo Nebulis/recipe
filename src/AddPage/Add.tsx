@@ -14,7 +14,7 @@ import { IngredientContext } from "../IngredientProvider";
 import { Input, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
 
-const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch"];
+const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif"];
 
 interface SelectProps extends SelectHTMLAttributes<any> {
   label: string;
