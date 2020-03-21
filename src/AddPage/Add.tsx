@@ -9,7 +9,7 @@ import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
-import { generateSearch, units, wait } from "../utils";
+import { generateSearch, normalize, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
@@ -238,7 +238,6 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
 };
 
 const initialUnit = "Gramme";
-const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
 export const Add = () => {
   const nameInput = useInput({ value: "" });
   const caloriesInput = useInput({ value: "" });

@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useContext, useEffect, useState } from "react";
-import {Link, useParams} from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
 import { transformTime, transformUnit, wait } from "../utils";
@@ -252,8 +252,8 @@ export const Recipe: React.FunctionComponent = () => {
                   key={category}
                   className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
                 >
-              {category}
-            </span>
+                  {category}
+                </span>
               );
             })}
           </div>

@@ -57,3 +57,5 @@ export const generateSearch = (value: string): string[] => {
     })
     .flat();
 };
+
+export const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
