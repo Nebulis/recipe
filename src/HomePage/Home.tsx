@@ -183,7 +183,7 @@ export const Home: React.FunctionComponent = () => {
           setStatus("FINISHED");
         }
       });
-  }, [paginate, runSearch, searchIngredient, searchType, nameInput.value]);
+  }, [paginate, runSearch, searchIngredient, searchType, nameInput.value, LIMIT]);
   return (
     <>
       <div className="mb-3 mt-3 flex justify-center">
