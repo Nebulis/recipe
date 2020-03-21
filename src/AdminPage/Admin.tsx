@@ -193,50 +193,57 @@ export const Admin = () => {
                 .doc(normalizedTo)
                 .get()
                 .then(snapshot => snapshot.data());
+              // transfer recipes fromIngredient from to toIngredient
+              const ingredientRefTo = database.collection(INGREDIENTS_COLLECTION).doc(normalizedTo);
+              const ingredientRefFrom = database.collection(INGREDIENTS_COLLECTION).doc(normalizedFrom);
+              const { name, ...recipes } = ingredientFrom;
 
               if (ingredientTo) {
-                // transfer recipes fromIngredient from to toIngredient
-                const ingredientRefTo = database.collection(INGREDIENTS_COLLECTION).doc(normalizedTo);
-                const ingredientRefFrom = database.collection(INGREDIENTS_COLLECTION).doc(normalizedFrom);
-                const { name, ...recipes } = ingredientFrom;
                 batch.update(ingredientRefTo, recipes);
-
-                // delete fromIngredient
-                batch.delete(ingredientRefFrom);
-
-                // rename ingredient in recipes
-                for (const recipe in recipes) {
-                  const recipeIngredientFromRef = database
-                    .collection(RECIPES_COLLECTION)
-                    .doc(recipe)
-                    .collection(INGREDIENTS_COLLECTION)
-                    .doc(normalizedFrom);
-                  const recipeIngredientToRef = database
-                    .collection(RECIPES_COLLECTION)
-                    .doc(recipe)
-                    .collection(INGREDIENTS_COLLECTION)
-                    .doc(normalizedTo);
-
-                  const recipeIngredient = await recipeIngredientFromRef.get().then(snapshot => snapshot.data());
-
-                  batch.set(recipeIngredientToRef, { ...recipeIngredient, name: to });
-                  batch.delete(recipeIngredientFromRef);
-                }
-
-                // remove fromName from the list
-                batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
-                  value: firebase.firestore.FieldValue.arrayRemove(from)
-                });
               } else {
-                setStatus("ERROR");
-                setError(`Ingredient ${to} you want to update to does not exist`);
-                return;
+                batch.set(ingredientRefTo, { ...ingredientFrom, name: to });
+              }
+
+              // delete fromIngredient
+              batch.delete(ingredientRefFrom);
+
+              // rename ingredient in recipes
+              for (const recipe in recipes) {
+                const recipeIngredientFromRef = database
+                  .collection(RECIPES_COLLECTION)
+                  .doc(recipe)
+                  .collection(INGREDIENTS_COLLECTION)
+                  .doc(normalizedFrom);
+                const recipeIngredientToRef = database
+                  .collection(RECIPES_COLLECTION)
+                  .doc(recipe)
+                  .collection(INGREDIENTS_COLLECTION)
+                  .doc(normalizedTo);
+
+                const recipeIngredient = await recipeIngredientFromRef.get().then(snapshot => snapshot.data());
+
+                batch.set(recipeIngredientToRef, { ...recipeIngredient, name: to });
+                batch.delete(recipeIngredientFromRef);
+              }
+
+              // remove from from the list
+              batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
+                value: firebase.firestore.FieldValue.arrayRemove(from)
+              });
+
+              // add to to the list
+              if (!ingredientTo) {
+                batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
+                  value: firebase.firestore.FieldValue.arrayUnion(to)
+                });
               }
 
               batch
                 .commit()
                 .then(() => {
                   setStatus("SUCCESS");
+                  setFrom("");
+                  setTo("");
                 })
                 .catch(error => {
                   setStatus("ERROR");
