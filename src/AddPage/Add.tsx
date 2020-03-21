@@ -15,7 +15,7 @@ import { Input, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
 import firebase from "firebase";
 
-const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif"];
+const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert"];
 
 interface SelectProps extends SelectHTMLAttributes<any> {
   label: string;
@@ -322,24 +322,24 @@ export const Add = () => {
             </div>
           </div>
         </div>
-        <div className="flex flex-wrap mb-6">
-          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
+        <div className="flex flex-wrap">
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-3">
             <Input label="Prepare time (minuts)" id="prepare-time" placeholder="45" {...prepareTimeInput} />
           </div>
-          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-3">
             <Input label="Cook time (minuts)" id="cook-time" placeholder="240" {...cookTimeInput} />
           </div>
-          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-3 md:mb-3">
             <Input label="Rest time (minuts)" id="rest-time" placeholder="20" {...restTimeInput} />
           </div>
-          <div className="w-1/2 md:w-1/4 px-3 mb-6 md:mb-0">
+          <div className="w-1/2 md:w-1/4 px-3 mb-3 md:mb-3">
             <Input label="Serves" id="serves" placeholder="2" {...servesInput} />
           </div>
         </div>
         <div className="flex flex-wrap mb-6 justify-center">
           {categories.map(category => (
             <button
-              className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 ${
+              className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded mx-1 border-pink-800 mt-3 ${
                 selectedCategories.includes(category)
                   ? "text-white bg-pink-900 hover:bg-pink-800"
                   : "hover:bg-purple-700 hover:text-white text-purple-700"
