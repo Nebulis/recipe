@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useContext, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {Link, useParams} from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
 import { transformTime, transformUnit, wait } from "../utils";
@@ -174,7 +174,7 @@ export const Recipe: React.FunctionComponent = () => {
           <div className="mb-6">
             <img src={recipe.imageUrl} className="h-64 w-full object-cover" alt="recipe" />
           </div>
-          <div className="bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 flex">
+          <div className="bg-gray-200 border-t-4 border-purple-700 p-4 flex">
             <div className="w-1/5 flex flex-col items-center">
               <User className="fill-current w-4 h-4 mb-1" />
               <EditableInput
@@ -243,6 +243,19 @@ export const Recipe: React.FunctionComponent = () => {
                 }}
               />
             </div>
+          </div>
+
+          <div className="px-6 pt-2 mb-4 text-center">
+            {recipe.categories.map(category => {
+              return (
+                <span
+                  key={category}
+                  className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
+                >
+              {category}
+            </span>
+              );
+            })}
           </div>
           <div className="flex w-full flex-col md:flex-row">
             <div className="bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 w-full md:w-2/6 md:mr-3 md:mb-0">

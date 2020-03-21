@@ -53,12 +53,12 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
           {calories}
         </div>
       </div>
-      <div className="px-6 py-4 text-center">
+      <div className="px-6 pb-4 pt-2 text-center">
         {categories.map(category => {
           return (
             <span
               key={category}
-              className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2"
+              className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
             >
               {category}
             </span>
