@@ -4,7 +4,7 @@ import { RecipeWithIngredient, Status } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
 import { transformTime, transformUnit, wait } from "../utils";
 import { RecipeContext } from "../RecipeProvider";
-import { Input, useInput } from "../Common/Input";
+import { Input, Textarea, useInput } from "../Common/Input";
 
 const EditableInput: FunctionComponent<{
   edit: boolean;
@@ -51,7 +51,69 @@ const EditableInput: FunctionComponent<{
   ) : (
     <span
       onClick={() => {
-        setDisplayInput(true);
+        if (edit) {
+          setDisplayInput(true);
+        }
+      }}
+      className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}
+    >
+      {displayedValue || value}
+    </span>
+  );
+};
+const EditableTextarea: FunctionComponent<{
+  edit: boolean;
+  id: string;
+  value: string;
+  displayedValue?: string;
+  className?: string;
+  onUpdate: (value: string) => Promise<any>;
+}> = ({ id, edit, className = "", value, displayedValue, onUpdate }) => {
+  const [displayInput, setDisplayInput] = useState(false);
+
+  const [status, setStatus] = useState<Status>("INITIAL");
+  const inputValue = useInput({ value });
+  return displayInput ? (
+    <div className="text-left flex">
+      <Textarea
+        id={id}
+        {...inputValue}
+        autoFocus
+        onKeyUp={async event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            setStatus("LOADING");
+            await Promise.all([onUpdate(inputValue.value), wait(500)]);
+            setDisplayInput(false);
+            setStatus("SUCCESS");
+          }
+        }}
+        onKeyPress={event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+          }
+        }}
+        inputClassName="appearance-none block w-full bg-white text-gray-700 border rounded-l py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
+      />
+      <button
+        className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded-r border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center mb-3"
+        onClick={async event => {
+          event.preventDefault();
+          setStatus("LOADING");
+          await Promise.all([onUpdate(inputValue.value), wait(500)]);
+          setDisplayInput(false);
+          setStatus("SUCCESS");
+        }}
+      >
+        {status === "LOADING" ? <Spinner className="w-6 h-6 fa-spin" /> : <Save className="w-6 h-6" />}
+      </button>
+    </div>
+  ) : (
+    <span
+      onClick={() => {
+        if (edit) {
+          setDisplayInput(true);
+        }
       }}
       className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}
     >
@@ -201,7 +263,7 @@ export const Recipe: React.FunctionComponent = () => {
                     </span>
                   </div>
                   <div className="flex-grow">
-                    <EditableInput
+                    <EditableTextarea
                       id={`step-${index}`}
                       edit={edit}
                       value={step}

@@ -11,7 +11,7 @@ import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
 import { generateSearch, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
-import { Input, useInput } from "../Common/Input";
+import { Input, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
 import firebase from "firebase";
 
@@ -203,7 +203,7 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
   return (
     <>
       <div className="w-full px-3 mb-6 md:mb-0">
-        <Input
+        <Textarea
           label={
             <>
               Step {stepNumber}{" "}
@@ -225,6 +225,11 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
           }
           id={step.id}
           placeholder="Fold whipped cream into mascarpone cream mixture.."
+          onKeyPress={event => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+            }
+          }}
           {...stepInput}
         />
       </div>
