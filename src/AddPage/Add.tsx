@@ -2,7 +2,7 @@ import React, { SelectHTMLAttributes, useContext, useEffect, useRef, useState } 
 import {
   database,
   INGREDIENTS_COLLECTION,
-  INGREDIENTS_LIST__COLLECTION,
+  INGREDIENTS_LIST_COLLECTION,
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
@@ -13,6 +13,7 @@ import { generateSearch, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
+import firebase from "firebase";
 
 const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif"];
 
@@ -503,8 +504,8 @@ export const Add = () => {
                   );
 
                   // add the ingredient
-                  const ingredientListRef = database.collection(INGREDIENTS_LIST__COLLECTION).doc(ingredientId);
-                  batch.set(ingredientListRef, { name: ingredient.name });
+                  const ingredientListRef = database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients");
+                  batch.update(ingredientListRef, { value: firebase.firestore.FieldValue.arrayUnion(ingredient.name) });
                 });
               batch
                 .commit()

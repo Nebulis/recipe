@@ -31,7 +31,7 @@ export const logout = () => {
 // this collection stores recipes associated to ingredients
 export const INGREDIENTS_COLLECTION = "ingredients";
 // this collection stores only ingredients
-export const INGREDIENTS_LIST__COLLECTION = "ingredients-list";
+export const INGREDIENTS_LIST_COLLECTION = "references";
 // this collections stores recipes and ingredients
 export const RECIPES_COLLECTION = "recipes";
 export const database = firebase.firestore();

@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
-import { Bolt, Clock, Info, Oven, Pause, Plus, Search, Spinner, Sync, User } from "../icon";
+import { Bolt, Clock, Info, Oven, Pause, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
 import { transformTime, wait } from "../utils";
@@ -74,7 +74,7 @@ export const Home: React.FunctionComponent = () => {
   const [searchType, setSearchType] = useState<"BY_TITLE" | "BY_INGREDIENT">("BY_TITLE");
   const [paginate, setPaginate] = useState("");
   const [runSearch, setRunSearch] = useState(true);
-  const LIMIT = 20;
+  const LIMIT = process.env.NODE_ENV === "development" ? 2 : 20;
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
     //   calories: 511,
