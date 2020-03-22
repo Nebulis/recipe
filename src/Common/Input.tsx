@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, TextareaHTMLAttributes, useState } from "react";
+import React, { InputHTMLAttributes, TextareaHTMLAttributes, useCallback, useState } from "react";
 
 interface InputProps extends InputHTMLAttributes<any> {
   label?: React.ReactNode;
@@ -89,8 +89,9 @@ export const Textarea: React.FunctionComponent<InputProps> = React.forwardRef<HT
 export const useInput = ({ value: initialValue = "" } = {}) => {
   const [value, setValue] = useState(initialValue);
   // not using event type so that can freely call this function manually without typescript complaining
-  const onChange = (event: { target: { value: string } }) => {
+  const onChange = useCallback((event: { target: { value: string } }) => {
+    console.log(`onChange input => ${event.target.value}`);
     setValue(event.target.value);
-  };
+  }, []);
   return { value, onChange };
 };
