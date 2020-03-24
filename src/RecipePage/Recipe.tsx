@@ -151,7 +151,7 @@ export const Recipe: React.FunctionComponent = () => {
               value={recipe.name}
               className="border-b-2 border-pink-600"
               onUpdate={value => {
-                return updateRecipe(params.id, "name", value).then(recipe => {
+                return updateRecipe(params.id, "name", value, recipe.ingredients).then(recipe => {
                   setRecipe(recipe);
                 });
               }}
@@ -183,7 +183,7 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.serves)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "serves", Number(value)).then(recipe => {
+                  return updateRecipe(params.id, "serves", Number(value), recipe.ingredients).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -197,7 +197,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.prepareTime)}
                 displayedValue={transformTime(recipe.prepareTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "prepareTime", Number(value)).then(recipe => {
+                  return updateRecipe(params.id, "prepareTime", Number(value), recipe.ingredients).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -211,7 +211,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.cookTime)}
                 displayedValue={transformTime(recipe.cookTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "cookTime", Number(value)).then(recipe => {
+                  return updateRecipe(params.id, "cookTime", Number(value), recipe.ingredients).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -225,7 +225,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.restTime)}
                 displayedValue={transformTime(recipe.restTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "restTime", Number(value)).then(recipe => {
+                  return updateRecipe(params.id, "restTime", Number(value), recipe.ingredients).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -238,7 +238,7 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.calories)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "calories", Number(value)).then(recipe => {
+                  return updateRecipe(params.id, "calories", Number(value), recipe.ingredients).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -260,12 +260,13 @@ export const Recipe: React.FunctionComponent = () => {
                     } else {
                       newCategories = [category].concat(recipe.categories);
                     }
-                    return Promise.all([updateRecipe(params.id, "categories", newCategories), wait(700)]).then(
-                      ([recipe]) => {
-                        setRecipe(recipe);
-                        setUpdateCategory("");
-                      }
-                    );
+                    return Promise.all([
+                      updateRecipe(params.id, "categories", newCategories, recipe.ingredients),
+                      wait(700)
+                    ]).then(([recipe]) => {
+                      setRecipe(recipe);
+                      setUpdateCategory("");
+                    });
                   }}
                   className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2 border-2 border-solid border-pink-600  
                   ${edit ? "cursor-pointer" : ""}
@@ -308,11 +309,12 @@ export const Recipe: React.FunctionComponent = () => {
                       value={step}
                       className="inline-block w-full"
                       onUpdate={value => {
-                        return updateRecipe(params.id, "steps", [
-                          ...recipe.steps.slice(0, index),
-                          value,
-                          ...recipe.steps.slice(index + 1)
-                        ]).then(recipe => {
+                        return updateRecipe(
+                          params.id,
+                          "steps",
+                          [...recipe.steps.slice(0, index), value, ...recipe.steps.slice(index + 1)],
+                          recipe.ingredients
+                        ).then(recipe => {
                           setRecipe(recipe);
                         });
                       }}
