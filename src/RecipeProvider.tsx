@@ -2,55 +2,31 @@ import React, { useCallback, useState } from "react";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "./firebase/configuration";
 import { Recipe, RecipeIngredient, RecipeWithIngredient } from "./type";
 
-const initialRecipes: { [key: string]: RecipeWithIngredient } = {};
-//   {
-//   "carbonade-flamande": {
-//     id: "carbonade-flamande",
-//     calories: 0,
-//     categories: ["Cookeo", "Batch", "Midi", "Soir"],
-//     cookTime: 107,
-//     createdAt: {
-//       seconds: 1584453742,
-//       nanoseconds: 246000000
-//     },
-//     imageUrl: "https://recipe-lma.s3.amazonaws.com/183889d9-6039-4986-a161-8bedd3bb588f",
-//     name: "Carbonade Flamande",
-//     prepareTime: 30,
-//     restTime: 0,
-//     serves: 6,
-//     steps: ["Cookeo monde doré", "Servir chaud"],
-//     ingredients: [
-//       {
-//         id: "boeuf",
-//         name: "Boeuf",
-//         quantity: 2,
-//         unit: "Piece"
-//       },
-//       {
-//         id: "carotte",
-//         name: "Carotte",
-//         quantity: 2,
-//         unit: "Piece"
-//       },
-//       {
-//         id: "courgette",
-//         name: "Courgette",
-//         quantity: 5,
-//         unit: "Kg"
-//       }
-//     ]
-//   }
-// };
+const initialRecipes: { [key: string]: RecipeWithIngredient } = {
+  // "test-tit-cheri": {
+  //   id: "test-tit-cheri",
+  //   calories: 200,
+  //   categories: ["Matin", "Midi", "Soir", "Cookeo", "Batch"],
+  //   cookTime: 1,
+  //   createdAt: { seconds: 1584601396, nanoseconds: 946000000 },
+  //   imageUrl: "https://recipe-lma.s3.ap-southeast-1.amazonaws.com/c9478dd1-ab40-4921-88d6-435015bc81cd",
+  //   name: "0A TEST TIT CHERIiii",
+  //   prepareTime: 150,
+  //   restTime: 11,
+  //   search: ["tes", "test", "tit", "che", "cher", "cheri", "cherii", "cheriii", "cheriiii"],
+  //   serves: 10,
+  //   steps: ["Coupezzzzsd sd", " mélangez"],
+  //   ingredients: [
+  //     { id: "carotte", name: "Carotte", quantity: 2, unit: "Piece" },
+  //     { id: "escalope-de-poulet", name: "Escalope de Poulet", quantity: 200, unit: "Gramme" }
+  //   ]
+  // }
+};
 
 interface RecipeContextType {
   loadRecipe: (id: string) => Promise<RecipeWithIngredient>;
   getRecipe: (id: string) => RecipeWithIngredient | undefined;
-  updateRecipe: <T extends keyof Recipe>(
-    id: string,
-    key: T,
-    value: Recipe[T],
-    ingredients: RecipeIngredient[]
-  ) => Promise<RecipeWithIngredient>;
+  updateRecipe: <T extends keyof Recipe>(id: string, key: T, value: Recipe[T]) => Promise<RecipeWithIngredient>;
 }
 export const RecipeContext = React.createContext<RecipeContextType>({
   getRecipe: () => {
@@ -70,22 +46,20 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
 
   const getRecipe = useCallback((id: string) => recipes[id], [recipes]);
   const updateRecipe = useCallback(
-    (id: string, key: string, value: any, ingredients: RecipeIngredient[]) => {
-      const batch = database.batch();
-      batch.update(database.collection(RECIPES_COLLECTION).doc(id), { [key]: value });
+    (id: string, key: string, value: any) => {
+      return database
+        .collection(RECIPES_COLLECTION)
+        .doc(id)
+        .update({ [key]: value })
+        .then(() => {
+          const newRecipe = {
+            ...recipes[id],
+            [key]: value
+          };
 
-      ingredients.forEach(ingredient => {
-        batch.update(database.collection(INGREDIENTS_COLLECTION).doc(ingredient.id), { [`${id}.${key}`]: value });
-      });
-      return batch.commit().then(() => {
-        const newRecipe = {
-          ...recipes[id],
-          [key]: value
-        };
-
-        setRecipes({ ...recipes, [id]: newRecipe });
-        return newRecipe;
-      });
+          setRecipes({ ...recipes, [id]: newRecipe });
+          return newRecipe;
+        });
     },
     [recipes]
   );

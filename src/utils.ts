@@ -59,3 +59,5 @@ export const generateSearch = (value: string): string[] => {
 };
 
 export const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
+
+export const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert"];

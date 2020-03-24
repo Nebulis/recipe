@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Bolt, Clock, Info, Oven, Pause, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
-import { transformTime, wait } from "../utils";
+import { categories, transformTime, wait } from "../utils";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
@@ -14,7 +14,7 @@ interface RecipeCardProps extends Recipe {
 const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
   id,
   name,
-  categories,
+  categories: recipeCategories,
   imageUrl,
   serves,
   prepareTime,
@@ -54,16 +54,18 @@ const RecipeCard: React.FunctionComponent<RecipeCardProps> = ({
         </div>
       </div>
       <div className="px-6 pb-4 pt-2 text-center">
-        {categories.map(category => {
-          return (
-            <span
-              key={category}
-              className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
-            >
-              {category}
-            </span>
-          );
-        })}
+        {categories
+          .filter(category => recipeCategories.includes(category))
+          .map(category => {
+            return (
+              <span
+                key={category}
+                className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
+              >
+                {category}
+              </span>
+            );
+          })}
       </div>
     </Link>
   );

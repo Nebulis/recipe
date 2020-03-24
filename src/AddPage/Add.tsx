@@ -9,13 +9,11 @@ import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
 import { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
-import { generateSearch, normalize, units, wait } from "../utils";
+import { categories, generateSearch, normalize, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
 import firebase from "firebase";
-
-const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert"];
 
 interface SelectProps extends SelectHTMLAttributes<any> {
   label: string;

@@ -2,7 +2,7 @@ import React, { FunctionComponent, useContext, useEffect, useState } from "react
 import { useParams } from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
-import { transformTime, transformUnit, wait } from "../utils";
+import { categories, transformTime, transformUnit, wait } from "../utils";
 import { RecipeContext } from "../RecipeProvider";
 import { Input, Textarea, useInput } from "../Common/Input";
 
@@ -128,6 +128,7 @@ export const Recipe: React.FunctionComponent = () => {
   const [edit, setEdit] = useState(false);
   const [recipe, setRecipe] = useState<RecipeWithIngredient | undefined>(getRecipe(params.id));
   const [status, setStatus] = useState<Status>(recipe ? "SUCCESS" : "LOADING");
+  const [updateCategory, setUpdateCategory] = useState("");
 
   useEffect(() => {
     if (!recipe) {
@@ -150,7 +151,7 @@ export const Recipe: React.FunctionComponent = () => {
               value={recipe.name}
               className="border-b-2 border-pink-600"
               onUpdate={value => {
-                return updateRecipe(params.id, "name", value, recipe.ingredients).then(recipe => {
+                return updateRecipe(params.id, "name", value).then(recipe => {
                   setRecipe(recipe);
                 });
               }}
@@ -182,7 +183,7 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.serves)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "serves", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "serves", Number(value)).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -196,7 +197,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.prepareTime)}
                 displayedValue={transformTime(recipe.prepareTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "prepareTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "prepareTime", Number(value)).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -210,7 +211,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.cookTime)}
                 displayedValue={transformTime(recipe.cookTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "cookTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "cookTime", Number(value)).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -224,7 +225,7 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.restTime)}
                 displayedValue={transformTime(recipe.restTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "restTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "restTime", Number(value)).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -237,7 +238,7 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.calories)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "calories", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "calories", Number(value)).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -245,13 +246,38 @@ export const Recipe: React.FunctionComponent = () => {
             </div>
           </div>
 
-          <div className="px-6 pt-2 mb-4 text-center">
-            {recipe.categories.map(category => {
+          <div className="px-6 pt-2 mb-4 text-center flex justify-center">
+            {categories.map(category => {
               return (
                 <span
                   key={category}
-                  className="inline-block bg-pink-600 rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2"
+                  onClick={() => {
+                    if (!edit) return;
+                    setUpdateCategory(category);
+                    let newCategories: string[] = [];
+                    if (recipe.categories.includes(category)) {
+                      newCategories = recipe.categories.filter(c => c !== category);
+                    } else {
+                      newCategories = [category].concat(recipe.categories);
+                    }
+                    return Promise.all([updateRecipe(params.id, "categories", newCategories), wait(700)]).then(
+                      ([recipe]) => {
+                        setRecipe(recipe);
+                        setUpdateCategory("");
+                      }
+                    );
+                  }}
+                  className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2 border-2 border-solid border-pink-600  
+                  ${edit ? "cursor-pointer" : ""}
+                  ${recipe.categories.includes(category) ? "bg-pink-600" : ""}
+                  ${!edit && !recipe.categories.includes(category) ? "hidden" : ""}
+                  ${
+                    edit && !recipe.categories.includes(category)
+                      ? "text-pink-600 hover:bg-pink-600 hover:text-white"
+                      : ""
+                  }${edit && recipe.categories.includes(category) ? "hover:text-pink-600 hover:bg-white" : ""}`}
                 >
+                  {updateCategory === category && <Spinner className="w-4 h-4 fa-spin mr-2" />}
                   {category}
                 </span>
               );
@@ -282,12 +308,11 @@ export const Recipe: React.FunctionComponent = () => {
                       value={step}
                       className="inline-block w-full"
                       onUpdate={value => {
-                        return updateRecipe(
-                          params.id,
-                          "steps",
-                          [...recipe.steps.slice(0, index), value, ...recipe.steps.slice(index + 1)],
-                          recipe.ingredients
-                        ).then(recipe => {
+                        return updateRecipe(params.id, "steps", [
+                          ...recipe.steps.slice(0, index),
+                          value,
+                          ...recipe.steps.slice(index + 1)
+                        ]).then(recipe => {
                           setRecipe(recipe);
                         });
                       }}
