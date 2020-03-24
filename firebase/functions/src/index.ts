@@ -50,7 +50,23 @@ app.post("/", (req, res) => {
     })
     .catch(e => {
       console.error(e);
-      res.json(e);
+      res.status(500).json(e);
+    });
+});
+app.delete("/:id", (req, res) => {
+  const params: AWS.S3.DeleteObjectRequest = {
+    Bucket,
+    Key: req.params.id
+  };
+  s3.deleteObject(params)
+    .promise()
+    .then(data => {
+      console.log(data);
+      res.json({ message: "ok" });
+    })
+    .catch(e => {
+      console.error(e);
+      res.status(500).json(e);
     });
 });
 

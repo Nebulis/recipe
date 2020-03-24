@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useContext, useEffect, useState } from "react";
+import React, { FunctionComponent, useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RecipeWithIngredient, Status } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
@@ -122,6 +122,53 @@ const EditableTextarea: FunctionComponent<{
   );
 };
 
+const EditableImage: FunctionComponent<{
+  edit: boolean;
+  id: string;
+  value: string;
+  displayedValue?: string;
+  className?: string;
+  onUpdate: (value: File) => Promise<any>;
+}> = ({ id, edit, className = "", value, displayedValue, onUpdate }) => {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<Status>("INITIAL");
+
+  return (
+    <div
+      onClick={() => {
+        if (edit && fileRef.current) {
+          fileRef.current.click();
+        }
+      }}
+      className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}
+    >
+      {status === "LOADING" && (
+        <Spinner className="w-6 h-6 fa-spin absolute text-pink-500 w-8 h-8 z-50 bg-white rounded-full" />
+      )}
+      <img
+        src={value}
+        className={`h-64 w-full object-cover ${status === "LOADING" ? "opacity-50" : ""}`}
+        alt="recipe"
+      />
+      <input
+        accept=".jpg, .jpeg, .png"
+        type="file"
+        ref={fileRef}
+        className="hidden"
+        onChange={async event => {
+          const files = event.target.files;
+          if (fileRef.current && files && files.length === 1) {
+            setStatus("LOADING");
+            onUpdate(files[0]).then(() => {
+              setStatus("SUCCESS");
+            });
+          }
+        }}
+      />
+    </div>
+  );
+};
+
 export const Recipe: React.FunctionComponent = () => {
   const params = useParams<{ id: string }>();
   const { loadRecipe, getRecipe, updateRecipe } = useContext(RecipeContext);
@@ -173,7 +220,41 @@ export const Recipe: React.FunctionComponent = () => {
             )}
           </h1>
           <div className="mb-6">
-            <img src={recipe.imageUrl} className="h-64 w-full object-cover" alt="recipe" />
+            <EditableImage
+              edit={edit}
+              id="image"
+              value={recipe.imageUrl}
+              onUpdate={async file => {
+                const paths = recipe.imageUrl.split("/");
+                const key = paths[paths.length - 1];
+                // upload :)
+                await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload/${key}`, {
+                  method: "DELETE",
+                  headers: {
+                    Accept: "application/json"
+                  }
+                }).then(res => {
+                  if (res.status >= 400) {
+                    throw new Error("Unable to delete the image");
+                  }
+                  return res.json();
+                });
+                const data = new FormData();
+                data.append("file", file);
+                const imageUrl = await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload`, {
+                  method: "POST",
+                  body: data,
+                  headers: {
+                    Accept: "application/json"
+                  }
+                })
+                  .then(res => res.json())
+                  .then(res => res.url);
+                return updateRecipe(recipe.id, "imageUrl", imageUrl, recipe?.ingredients).then(recipe => {
+                  setRecipe(recipe);
+                });
+              }}
+            />
           </div>
           <div className="bg-gray-200 border-t-4 border-purple-700 p-4 flex">
             <div className="w-1/5 flex flex-col items-center">
