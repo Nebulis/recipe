@@ -1,10 +1,12 @@
 import React, { FunctionComponent, useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { RecipeWithIngredient, Status } from "../type";
-import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Save, Spinner, User } from "../icon";
-import { categories, transformTime, transformUnit, wait } from "../utils";
+import { RecipeIngredient, RecipeWithIngredient, Status, Unit } from "../type";
+import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Plus, Save, Spinner, Times, User } from "../icon";
+import { categories, transformTime, transformUnit, units, wait } from "../utils";
 import { RecipeContext } from "../RecipeProvider";
-import { Input, Textarea, useInput } from "../Common/Input";
+import { Input, Select, Textarea, useInput } from "../Common/Input";
+import { IngredientContext } from "../IngredientProvider";
+import { useCombobox } from "downshift";
 
 const EditableInput: FunctionComponent<{
   edit: boolean;
@@ -121,6 +123,156 @@ const EditableTextarea: FunctionComponent<{
     </span>
   );
 };
+const EditableIngredient: FunctionComponent<{
+  edit: boolean;
+  ingredient: RecipeIngredient;
+  displayedValue?: string;
+  className?: string;
+  onAdd: (name: string, quantity: number, unit: string) => Promise<any>;
+  onUpdate: (quantity: number, unit: string) => Promise<any>;
+  onDelete: () => void;
+  onNew: () => void;
+}> = ({ ingredient, edit, className = "", displayedValue, onUpdate, onDelete, onNew, onAdd }) => {
+  const [status, setStatus] = useState<Status>("INITIAL");
+  const quantityInput = useInput({ value: String(ingredient.quantity) });
+  const unitInput = useInput({ value: ingredient.unit });
+  const isNew = ingredient.id === "";
+  const { ingredients } = useContext(IngredientContext);
+  const [inputItems, setInputItems] = useState(ingredients);
+
+  const {
+    isOpen,
+    getMenuProps,
+    getInputProps,
+    getComboboxProps,
+    highlightedIndex,
+    getItemProps,
+    inputValue
+  } = useCombobox({
+    initialInputValue: ingredient.name,
+    items: inputItems,
+    onInputValueChange: ({ inputValue = "" }) => {
+      const selection = ingredients
+        .filter(ingredient => ingredient.toLowerCase().includes(inputValue.toLowerCase()))
+        .slice(0, 20);
+      // add the current item if he's not in the list
+      setInputItems(selection.length > 0 ? selection : [inputValue]);
+    }
+  });
+
+  const addOrUpdate = async () => {
+    setStatus("LOADING");
+    if (isNew) {
+      await Promise.all([onAdd(inputValue, Number(quantityInput.value), unitInput.value), wait(500)]);
+    } else {
+      await Promise.all([onUpdate(Number(quantityInput.value), unitInput.value), wait(500)]);
+      setStatus("SUCCESS"); // on onAdd this trigger no op error from React
+    }
+  };
+
+  return edit ? (
+    <div className="flex flex-wrap flex justify-center px-3 sm:pr-3">
+      <div className="relative w-1/2 sm:pr-0 sm:mb-0" {...getComboboxProps()}>
+        <div className="">
+          <Input
+            inputClassName={`appearance-none block w-full text-black border rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white ${
+              isNew ? "bg-white" : "bg-gray-100 opacity-50"
+            }`}
+            onKeyUp={async event => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addOrUpdate();
+              }
+            }}
+            disabled={!isNew}
+            label={
+              <>
+                Ingredient
+                <Plus
+                  className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
+                  onClick={event => {
+                    event.preventDefault();
+                    onNew();
+                  }}
+                />
+                <Times
+                  className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
+                  onClick={async event => {
+                    event.preventDefault();
+                    setStatus("LOADING");
+                    wait(300).then(() => onDelete());
+                  }}
+                />
+              </>
+            }
+            id={`ingredient-name-${ingredient.id}`}
+            placeholder="Tomato"
+            {...getInputProps()}
+          />
+        </div>
+        <div
+          className="w-full overflow-y-auto bg-gray-400 absolute z-50"
+          {...getMenuProps()}
+          style={{ maxHeight: "10rem" }}
+        >
+          {isOpen &&
+            inputItems.map((item, index) => (
+              <div
+                className={`pl-4 py-2 border-b border-gray-100 border-solid ${
+                  highlightedIndex === index ? "bg-purple-700 text-white bold" : ""
+                }`}
+                key={`${item}${index}`}
+                {...getItemProps({ item, index })}
+              >
+                {item}
+              </div>
+            ))}
+        </div>
+      </div>
+      <div className="w-2/12">
+        <Input
+          label="Quantity"
+          id={`ingredient-quantity-${ingredient.id}`}
+          placeholder="4"
+          {...quantityInput}
+          autoFocus
+          onKeyUp={async event => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              addOrUpdate();
+            }
+          }}
+          inputClassName="appearance-none block w-full bg-white text-gray-700 border rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white"
+        />
+      </div>
+      <div className="w-3/12">
+        <Select
+          label="Unit"
+          id={`ingredient-unit-${ingredient.id}`}
+          options={units}
+          {...unitInput}
+          selectClassName="block appearance-none w-full bg-white border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+        />
+      </div>
+      <div className="flex items-end">
+        <button
+          className="bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded-r border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center"
+          onClick={async event => {
+            event.preventDefault();
+            addOrUpdate();
+          }}
+          style={{ height: "46px" }}
+        >
+          {status === "LOADING" ? <Spinner className="w-6 h-6 fa-spin" /> : <Save className="w-6 h-6" />}
+        </button>
+      </div>
+    </div>
+  ) : (
+    <span className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}>
+      {transformUnit(ingredient.quantity, ingredient.unit)} {ingredient.name}
+    </span>
+  );
+};
 
 const EditableImage: FunctionComponent<{
   edit: boolean;
@@ -171,11 +323,14 @@ const EditableImage: FunctionComponent<{
 
 export const Recipe: React.FunctionComponent = () => {
   const params = useParams<{ id: string }>();
-  const { loadRecipe, getRecipe, updateRecipe } = useContext(RecipeContext);
+  const { loadRecipe, getRecipe, updateRecipe, updateIngredient, deleteIngredient, addIngredient } = useContext(
+    RecipeContext
+  );
   const [edit, setEdit] = useState(false);
   const [recipe, setRecipe] = useState<RecipeWithIngredient | undefined>(getRecipe(params.id));
   const [status, setStatus] = useState<Status>(recipe ? "SUCCESS" : "LOADING");
   const [updateCategory, setUpdateCategory] = useState("");
+  const hasNew = recipe?.ingredients.some(ingredient => ingredient.id === "") ?? false;
 
   useEffect(() => {
     if (!recipe) {
@@ -349,7 +504,7 @@ export const Recipe: React.FunctionComponent = () => {
                       setUpdateCategory("");
                     });
                   }}
-                  className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2 border-2 border-solid border-pink-600  
+                  className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold text-white mr-2 mt-2 border-2 border-solid border-pink-600
                   ${edit ? "cursor-pointer" : ""}
                   ${recipe.categories.includes(category) ? "bg-pink-600" : ""}
                   ${!edit && !recipe.categories.includes(category) ? "hidden" : ""}
@@ -365,17 +520,47 @@ export const Recipe: React.FunctionComponent = () => {
               );
             })}
           </div>
-          <div className="flex w-full flex-col md:flex-row">
-            <div className="bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 w-full md:w-2/6 md:mr-3 md:mb-0">
+          <div className={`flex w-full flex-col ${edit ? "" : "md:flex-row"}`}>
+            <div
+              className={`bg-gray-200 border-t-4 border-purple-700 p-4 mb-6 w-full ${
+                edit ? "" : "md:w-2/6 md:mr-3 md:mb-0"
+              }`}
+            >
               {recipe.ingredients.map(ingredient => {
                 return (
                   <div key={ingredient.id} className="mb-2">
-                    {transformUnit(ingredient.quantity, ingredient.unit)} {ingredient.name}
+                    <EditableIngredient
+                      edit={edit}
+                      ingredient={ingredient}
+                      onUpdate={(quantity, unit) => {
+                        return updateIngredient(recipe.id, ingredient.id, quantity, unit as Unit).then(recipe => {
+                          setRecipe(recipe);
+                        });
+                      }}
+                      onAdd={(name, quantity, unit) => {
+                        return addIngredient(recipe.id, name, quantity, unit as Unit).then(recipe => {
+                          setRecipe(recipe);
+                        });
+                      }}
+                      onDelete={() => {
+                        deleteIngredient(recipe.id, ingredient.id).then(recipe => {
+                          setRecipe(recipe);
+                        });
+                      }}
+                      onNew={() => {
+                        if (!hasNew) {
+                          setRecipe({
+                            ...recipe,
+                            ingredients: [...recipe.ingredients, { id: "", unit: "Gramme", quantity: 0, name: "" }]
+                          });
+                        }
+                      }}
+                    />
                   </div>
                 );
               })}
             </div>
-            <div className="bg-gray-200 border-t-4 border-purple-700 md:ml-3 w-full md:w-4/6 p-4">
+            <div className={`bg-gray-200 border-t-4 border-purple-700 w-full p-4 ${edit ? "" : "md:w-4/6 md:ml-3"}`}>
               {recipe.steps.map((step, index) => (
                 <div key={index} className="mb-6 flex">
                   <div className="mr-3 -mt-1">
@@ -394,7 +579,7 @@ export const Recipe: React.FunctionComponent = () => {
                           params.id,
                           "steps",
                           [...recipe.steps.slice(0, index), value, ...recipe.steps.slice(index + 1)],
-                          recipe.ingredients
+                          [] // dont need to update the ingredients for step because steps are not saved in ingredients
                         ).then(recipe => {
                           setRecipe(recipe);
                         });

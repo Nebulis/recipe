@@ -177,6 +177,7 @@ export const Admin = () => {
               const normalizedFrom = normalize(from);
               const normalizedTo = normalize(to);
 
+              // fetch FROM ingredient
               const ingredientFrom = await database
                 .collection(INGREDIENTS_COLLECTION)
                 .doc(normalizedFrom)
@@ -188,11 +189,13 @@ export const Admin = () => {
                 setError(`Ingredient ${from} you want to update does not exist`);
                 return;
               }
+              // fetch TO ingredient
               const ingredientTo = await database
                 .collection(INGREDIENTS_COLLECTION)
                 .doc(normalizedTo)
                 .get()
                 .then(snapshot => snapshot.data());
+
               // transfer recipes fromIngredient from to toIngredient
               const ingredientRefTo = database.collection(INGREDIENTS_COLLECTION).doc(normalizedTo);
               const ingredientRefFrom = database.collection(INGREDIENTS_COLLECTION).doc(normalizedFrom);
@@ -205,7 +208,7 @@ export const Admin = () => {
               }
 
               // delete fromIngredient
-              batch.delete(ingredientRefFrom);
+              batch.delete(ingredientRefFrom); // this is suspicious .... :) shouldnt it run BEFORE ??
 
               // rename ingredient in recipes
               for (const recipe in recipes) {
@@ -223,15 +226,15 @@ export const Admin = () => {
                 const recipeIngredient = await recipeIngredientFromRef.get().then(snapshot => snapshot.data());
 
                 batch.set(recipeIngredientToRef, { ...recipeIngredient, name: to });
-                batch.delete(recipeIngredientFromRef);
+                batch.delete(recipeIngredientFromRef); // this is suspicious .... :) shouldnt it run BEFORE ??
               }
 
-              // remove from from the list
+              // remove FROM from the list
               batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
                 value: firebase.firestore.FieldValue.arrayRemove(from)
               });
 
-              // add to to the list
+              // add TO to the list
               if (!ingredientTo) {
                 batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
                   value: firebase.firestore.FieldValue.arrayUnion(to)
