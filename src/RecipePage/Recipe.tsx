@@ -126,13 +126,12 @@ const EditableTextarea: FunctionComponent<{
 const EditableIngredient: FunctionComponent<{
   edit: boolean;
   ingredient: RecipeIngredient;
-  displayedValue?: string;
   className?: string;
   onAdd: (name: string, quantity: number, unit: string) => Promise<any>;
   onUpdate: (quantity: number, unit: string) => Promise<any>;
   onDelete: () => void;
   onNew: () => void;
-}> = ({ ingredient, edit, className = "", displayedValue, onUpdate, onDelete, onNew, onAdd }) => {
+}> = ({ ingredient, edit, className = "", onUpdate, onDelete, onNew, onAdd }) => {
   const [status, setStatus] = useState<Status>("INITIAL");
   const quantityInput = useInput({ value: String(ingredient.quantity) });
   const unitInput = useInput({ value: ingredient.unit });
@@ -276,12 +275,10 @@ const EditableIngredient: FunctionComponent<{
 
 const EditableImage: FunctionComponent<{
   edit: boolean;
-  id: string;
   value: string;
-  displayedValue?: string;
   className?: string;
   onUpdate: (value: File) => Promise<any>;
-}> = ({ id, edit, className = "", value, displayedValue, onUpdate }) => {
+}> = ({ edit, className = "", value, onUpdate }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>("INITIAL");
 
@@ -377,7 +374,6 @@ export const Recipe: React.FunctionComponent = () => {
           <div className="mb-6">
             <EditableImage
               edit={edit}
-              id="image"
               value={recipe.imageUrl}
               onUpdate={async file => {
                 const paths = recipe.imageUrl.split("/");
@@ -490,7 +486,7 @@ export const Recipe: React.FunctionComponent = () => {
                   onClick={() => {
                     if (!edit) return;
                     setUpdateCategory(category);
-                    let newCategories: string[] = [];
+                    let newCategories: string[];
                     if (recipe.categories.includes(category)) {
                       newCategories = recipe.categories.filter(c => c !== category);
                     } else {

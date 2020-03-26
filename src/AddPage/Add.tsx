@@ -1,4 +1,4 @@
-import React, { SelectHTMLAttributes, useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   database,
   INGREDIENTS_COLLECTION,
@@ -6,14 +6,13 @@ import {
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
-import { firestore } from "firebase";
+import firebase, { firestore } from "firebase";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
 import { categories, generateSearch, normalize, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
-import {Input, Select, Textarea, useInput} from "../Common/Input";
+import { Input, Select, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
-import firebase from "firebase";
 
 interface IngredientType {
   id: string;
