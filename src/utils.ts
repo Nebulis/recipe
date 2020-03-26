@@ -43,7 +43,7 @@ export const generateSearch = (value: string): string[] => {
     .toLowerCase()
     .normalize("NFD") // https://stackoverflow.com/questions/990904/remove-accents-diacritics-in-a-string-in-javascript
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[-]/g, " ") // replace - by space
+    .replace(/[-']/g, " ") // replace - and ' by space
     .replace(/[^a-z ]/g, "") // keep letter and spaces
     .split(" ")
     .filter(word => word.length > 2)
