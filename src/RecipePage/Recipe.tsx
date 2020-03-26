@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useContext, useEffect, useRef, useState } from "react";
+import React, { FunctionComponent, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RecipeIngredient, RecipeWithIngredient, Status, Unit } from "../type";
 import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Plus, Save, Spinner, Times, User } from "../icon";
@@ -318,6 +318,7 @@ const EditableImage: FunctionComponent<{
   );
 };
 
+const createRandomId = () => `${Date.now()}-${Math.random() * 100000000 + 1}`;
 export const Recipe: React.FunctionComponent = () => {
   const params = useParams<{ id: string }>();
   const { loadRecipe, getRecipe, updateRecipe, updateIngredient, deleteIngredient, addIngredient } = useContext(
@@ -327,7 +328,18 @@ export const Recipe: React.FunctionComponent = () => {
   const [recipe, setRecipe] = useState<RecipeWithIngredient | undefined>(getRecipe(params.id));
   const [status, setStatus] = useState<Status>(recipe ? "SUCCESS" : "LOADING");
   const [updateCategory, setUpdateCategory] = useState("");
+  const [updateStep, setUpdateStep] = useState("");
   const hasNew = recipe?.ingredients.some(ingredient => ingredient.id === "") ?? false;
+  const steps = useMemo(() => {
+    return (
+      recipe?.steps.map(step => {
+        return {
+          id: createRandomId(),
+          step
+        };
+      }) ?? []
+    );
+  }, [recipe]);
 
   useEffect(() => {
     if (!recipe) {
@@ -557,18 +569,53 @@ export const Recipe: React.FunctionComponent = () => {
               })}
             </div>
             <div className={`bg-gray-200 border-t-4 border-purple-700 w-full p-4 ${edit ? "" : "md:w-4/6 md:ml-3"}`}>
-              {recipe.steps.map((step, index) => (
-                <div key={index} className="mb-6 flex">
+              {steps.map((step, index) => (
+                <div key={`${step.id}`} className="mb-6 flex">
                   <div className="mr-3 -mt-1">
                     <span className="bg-purple-700 p-1 text-white font-bold rounded-full h-8 w-8 inline-flex items-center justify-center">
                       {index + 1}
                     </span>
                   </div>
                   <div className="flex-grow">
+                    <div className="inline-flex items-center uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
+                      <Plus
+                        className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
+                        onClick={event => {
+                          event.preventDefault();
+                          setUpdateStep(step.id);
+                          updateRecipe(
+                            params.id,
+                            "steps",
+                            [...recipe.steps.slice(0, index + 1), "", ...recipe.steps.slice(index + 1)],
+                            [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                          ).then(recipe => {
+                            setUpdateStep("");
+                            setRecipe(recipe);
+                          });
+                        }}
+                      />
+                      <Times
+                        className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
+                        onClick={event => {
+                          event.preventDefault();
+                          setUpdateStep(step.id);
+                          updateRecipe(
+                            params.id,
+                            "steps",
+                            [...recipe.steps.slice(0, index), ...recipe.steps.slice(index + 1)],
+                            [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                          ).then(recipe => {
+                            setUpdateStep("");
+                            setRecipe(recipe);
+                          });
+                        }}
+                      />
+                      {updateStep === step.id && <Spinner className="w-3 h-3 fa-spin ml-1" />}
+                    </div>
                     <EditableTextarea
-                      id={`step-${index}`}
+                      id={`step-${step.id}`}
                       edit={edit}
-                      value={step}
+                      value={step.step}
                       className="inline-block w-full"
                       onUpdate={value => {
                         return updateRecipe(
