@@ -6,14 +6,13 @@ import {
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
-import firebase, { firestore } from "firebase";
+import * as firebase from "firebase/app";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
 import { categories, generateSearch, normalize, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, Select, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
-
 interface IngredientType {
   id: string;
   name: string;
@@ -435,7 +434,7 @@ export const Add = () => {
                 serves: Number(servesInput.value),
                 calories: Number(caloriesInput.value),
                 categories: selectedCategories,
-                createdAt: firestore.FieldValue.serverTimestamp(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 search: generateSearch(nameInput.value),
                 imageUrl,
                 steps: steps.map(step => step.step).filter(Boolean) // remove empty steps

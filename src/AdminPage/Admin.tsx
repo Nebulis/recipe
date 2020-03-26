@@ -10,7 +10,7 @@ import {
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { normalize, wait } from "../utils";
-import firebase from "firebase";
+import * as firebase from 'firebase/app';
 import { Status } from "../type";
 
 interface IngredientCombobox {

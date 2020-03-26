@@ -1,4 +1,4 @@
-import firebase from "firebase";
+import * as firebase from 'firebase/app';
 import React, { Component } from "react";
 import { UserContext } from "./Connexion/UserContext";
 import { BrowserRouter, NavLink, Route, Switch } from "react-router-dom";

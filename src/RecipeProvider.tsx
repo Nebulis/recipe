@@ -6,7 +6,7 @@ import {
   RECIPES_COLLECTION
 } from "./firebase/configuration";
 import { Recipe, RecipeIngredient, RecipeWithIngredient, Unit } from "./type";
-import firebase from "firebase";
+import * as firebase from 'firebase/app';
 import { normalize } from "./utils";
 
 const initialRecipes: { [key: string]: RecipeWithIngredient } = {
