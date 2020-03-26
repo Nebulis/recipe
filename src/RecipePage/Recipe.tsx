@@ -577,41 +577,43 @@ export const Recipe: React.FunctionComponent = () => {
                     </span>
                   </div>
                   <div className="flex-grow">
-                    <div className="inline-flex items-center uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
-                      <Plus
-                        className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
-                        onClick={event => {
-                          event.preventDefault();
-                          setUpdateStep(step.id);
-                          updateRecipe(
-                            params.id,
-                            "steps",
-                            [...recipe.steps.slice(0, index + 1), "", ...recipe.steps.slice(index + 1)],
-                            [] // dont need to update the ingredients for step because steps are not saved in ingredients
-                          ).then(recipe => {
-                            setUpdateStep("");
-                            setRecipe(recipe);
-                          });
-                        }}
-                      />
-                      <Times
-                        className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
-                        onClick={event => {
-                          event.preventDefault();
-                          setUpdateStep(step.id);
-                          updateRecipe(
-                            params.id,
-                            "steps",
-                            [...recipe.steps.slice(0, index), ...recipe.steps.slice(index + 1)],
-                            [] // dont need to update the ingredients for step because steps are not saved in ingredients
-                          ).then(recipe => {
-                            setUpdateStep("");
-                            setRecipe(recipe);
-                          });
-                        }}
-                      />
-                      {updateStep === step.id && <Spinner className="w-3 h-3 fa-spin ml-1" />}
-                    </div>
+                    {edit && (
+                      <div className="inline-flex items-center uppercase tracking-wide text-gray-700 text-xs font-bold mb-2">
+                        <Plus
+                          className="fill-current w-3 h-3 inline-block text-green-500 ml-1 cursor-pointer"
+                          onClick={event => {
+                            event.preventDefault();
+                            setUpdateStep(step.id);
+                            updateRecipe(
+                              params.id,
+                              "steps",
+                              [...recipe.steps.slice(0, index + 1), "", ...recipe.steps.slice(index + 1)],
+                              [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                            ).then(recipe => {
+                              setUpdateStep("");
+                              setRecipe(recipe);
+                            });
+                          }}
+                        />
+                        <Times
+                          className="fill-current w-3 h-3 inline-block text-red-500 ml-1 cursor-pointer"
+                          onClick={event => {
+                            event.preventDefault();
+                            setUpdateStep(step.id);
+                            updateRecipe(
+                              params.id,
+                              "steps",
+                              [...recipe.steps.slice(0, index), ...recipe.steps.slice(index + 1)],
+                              [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                            ).then(recipe => {
+                              setUpdateStep("");
+                              setRecipe(recipe);
+                            });
+                          }}
+                        />
+                        {updateStep === step.id && <Spinner className="w-3 h-3 fa-spin ml-1" />}
+                      </div>
+                    )}
                     <EditableTextarea
                       id={`step-${step.id}`}
                       edit={edit}
