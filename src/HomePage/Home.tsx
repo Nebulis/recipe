@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Bolt, Clock, Info, Oven, Pause, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
-import { categories, transformTime, wait } from "../utils";
+import { categories, normalizedCategories, transformTime, wait } from "../utils";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
@@ -76,6 +76,7 @@ export const Home: React.FunctionComponent = () => {
   const [searchType, setSearchType] = useState<"BY_TITLE" | "BY_INGREDIENT">("BY_TITLE");
   const [paginate, setPaginate] = useState("");
   const [runSearch, setRunSearch] = useState(true);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const LIMIT = process.env.NODE_ENV === "development" ? 2 : 20;
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
@@ -135,8 +136,12 @@ export const Home: React.FunctionComponent = () => {
     setStatus("LOADING");
     const getRecipeFromRecipes = () => {
       let ref = database.collection(RECIPES_COLLECTION).orderBy("name");
-      if (nameInput.value) {
-        ref = ref.where("search", "array-contains", nameInput.value.toLowerCase());
+      if (nameInput.value || selectedCategories.length > 0) {
+        ref = ref.where(
+          "search",
+          "array-contains-any",
+          [nameInput.value.toLowerCase(), ...selectedCategories].filter(Boolean)
+        );
       }
       return ref
         .startAfter(paginate)
@@ -185,7 +190,7 @@ export const Home: React.FunctionComponent = () => {
           setStatus("FINISHED");
         }
       });
-  }, [paginate, runSearch, searchIngredient, searchType, nameInput.value, LIMIT]);
+  }, [paginate, runSearch, searchIngredient, searchType, nameInput.value, LIMIT, selectedCategories]);
   return (
     <>
       <div className="mb-3 mt-3 flex justify-center">
@@ -285,6 +290,33 @@ export const Home: React.FunctionComponent = () => {
           </button>
         </div>
       </div>
+      {searchType === "BY_TITLE" && (
+        <div className="px-6 pt-2 mb-4 text-center flex justify-center">
+          {normalizedCategories.map(category => {
+            return (
+              <span
+                onClick={() => {
+                  setSelectedCategories(
+                    selectedCategories.includes(category.id)
+                      ? selectedCategories.filter(selectedCategory => selectedCategory !== category.id)
+                      : [...selectedCategories, category.id]
+                  );
+                  search()
+                }}
+                key={category.id}
+                className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold mr-2 mt-2 border-2 border-solid border-pink-600 cursor-pointer
+                  ${
+                    selectedCategories.includes(category.id)
+                      ? "bg-pink-600 text-white hover:text-pink-600 hover:bg-white"
+                      : "text-pink-600 hover:text-white hover:bg-pink-600"
+                  }`}
+              >
+                {category.title}
+              </span>
+            );
+          })}
+        </div>
+      )}
       {recipes.length > 0 && (
         <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
           {recipes.map(recipe => (

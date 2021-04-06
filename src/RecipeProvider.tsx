@@ -6,8 +6,8 @@ import {
   RECIPES_COLLECTION
 } from "./firebase/configuration";
 import { Recipe, RecipeIngredient, RecipeWithIngredient, Unit } from "./type";
-import * as firebase from 'firebase/app';
-import { normalize } from "./utils";
+import * as firebase from "firebase/app";
+import { generateSearch, normalize } from "./utils";
 
 const initialRecipes: { [key: string]: RecipeWithIngredient } = {
   // "test-tit-cheri": {
@@ -38,7 +38,11 @@ interface RecipeContextType {
     id: string,
     key: T,
     value: Recipe[T],
-    ingredients: RecipeIngredient[]
+    elements: {
+      ingredients: RecipeIngredient[];
+      categories: string[];
+      name: string;
+    }
   ) => Promise<RecipeWithIngredient>;
   updateIngredient: (id: string, ingredientId: string, quantity: number, unit: Unit) => Promise<RecipeWithIngredient>;
   addIngredient: (id: string, name: string, quantity: number, unit: Unit) => Promise<RecipeWithIngredient>;
@@ -177,9 +181,25 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
   );
 
   const updateRecipe = useCallback(
-    (id: string, key: string, value: any, ingredients: RecipeIngredient[]) => {
+    (
+      id: string,
+      key: string,
+      value: any,
+      {
+        ingredients,
+        categories,
+        name
+      }: {
+        ingredients: RecipeIngredient[];
+        categories: string[];
+        name: string;
+      }
+    ) => {
       const batch = database.batch();
       batch.update(database.collection(RECIPES_COLLECTION).doc(id), { [key]: value });
+      if (key === "name" || key === "categories") {
+        batch.update(database.collection(RECIPES_COLLECTION).doc(id), { search: generateSearch(name, categories) });
+      }
 
       ingredients.forEach(ingredient => {
         batch.update(database.collection(INGREDIENTS_COLLECTION).doc(ingredient.id), { [`${id}.${key}`]: value });

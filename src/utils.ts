@@ -38,8 +38,8 @@ export const wait = (timeout: number): Promise<number> => {
   });
 };
 
-export const generateSearch = (value: string): string[] => {
-  return value
+export const generateSearch = (value: string, categories: string[]): string[] => {
+  const searches = value
     .toLowerCase()
     .normalize("NFD") // https://stackoverflow.com/questions/990904/remove-accents-diacritics-in-a-string-in-javascript
     .replace(/[\u0300-\u036f]/g, "")
@@ -56,8 +56,16 @@ export const generateSearch = (value: string): string[] => {
       return words;
     })
     .flat();
+  return searches.concat(categories.map(normalizeCategory));
 };
 
 export const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
 
+const normalizeCategory = (category: string) =>
+  `category-${category
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()}`;
+
 export const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert", "Semaine", "Week-End"];
+export const normalizedCategories = categories.map(category => ({ id: normalizeCategory(category), title: category }));

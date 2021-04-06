@@ -435,7 +435,7 @@ export const Add = () => {
                 calories: Number(caloriesInput.value),
                 categories: selectedCategories,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                search: generateSearch(nameInput.value),
+                search: generateSearch(nameInput.value, selectedCategories),
                 imageUrl,
                 steps: steps.map(step => step.step).filter(Boolean) // remove empty steps
               };

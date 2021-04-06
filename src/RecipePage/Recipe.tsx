@@ -362,7 +362,11 @@ export const Recipe: React.FunctionComponent = () => {
               value={recipe.name}
               className="border-b-2 border-pink-600"
               onUpdate={value => {
-                return updateRecipe(params.id, "name", value, recipe.ingredients).then(recipe => {
+                return updateRecipe(params.id, "name", value, {
+                  ingredients: recipe.ingredients,
+                  categories: recipe.categories,
+                  name: value
+                }).then(recipe => {
                   setRecipe(recipe);
                 });
               }}
@@ -413,7 +417,11 @@ export const Recipe: React.FunctionComponent = () => {
                 })
                   .then(res => res.json())
                   .then(res => res.url);
-                return updateRecipe(recipe.id, "imageUrl", imageUrl, recipe?.ingredients).then(recipe => {
+                return updateRecipe(recipe.id, "imageUrl", imageUrl, {
+                  ingredients: recipe.ingredients,
+                  categories: recipe.categories,
+                  name: recipe.name
+                }).then(recipe => {
                   setRecipe(recipe);
                 });
               }}
@@ -427,7 +435,11 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.serves)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "serves", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "serves", Number(value), {
+                    ingredients: recipe.ingredients,
+                    categories: recipe.categories,
+                    name: recipe.name
+                  }).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -441,7 +453,11 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.prepareTime)}
                 displayedValue={transformTime(recipe.prepareTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "prepareTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "prepareTime", Number(value), {
+                    ingredients: recipe.ingredients,
+                    categories: recipe.categories,
+                    name: recipe.name
+                  }).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -455,7 +471,11 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.cookTime)}
                 displayedValue={transformTime(recipe.cookTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "cookTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "cookTime", Number(value), {
+                    ingredients: recipe.ingredients,
+                    categories: recipe.categories,
+                    name: recipe.name
+                  }).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -469,7 +489,11 @@ export const Recipe: React.FunctionComponent = () => {
                 value={String(recipe.restTime)}
                 displayedValue={transformTime(recipe.restTime)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "restTime", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "restTime", Number(value), {
+                    ingredients: recipe.ingredients,
+                    categories: recipe.categories,
+                    name: recipe.name
+                  }).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -482,7 +506,11 @@ export const Recipe: React.FunctionComponent = () => {
                 edit={edit}
                 value={String(recipe.calories)}
                 onUpdate={value => {
-                  return updateRecipe(params.id, "calories", Number(value), recipe.ingredients).then(recipe => {
+                  return updateRecipe(params.id, "calories", Number(value), {
+                    ingredients: recipe.ingredients,
+                    categories: recipe.categories,
+                    name: recipe.name
+                  }).then(recipe => {
                     setRecipe(recipe);
                   });
                 }}
@@ -505,7 +533,11 @@ export const Recipe: React.FunctionComponent = () => {
                       newCategories = [category].concat(recipe.categories);
                     }
                     return Promise.all([
-                      updateRecipe(params.id, "categories", newCategories, recipe.ingredients),
+                      updateRecipe(params.id, "categories", newCategories, {
+                        ingredients: recipe.ingredients,
+                        categories: newCategories,
+                        name: recipe.name
+                      }),
                       wait(700)
                     ]).then(([recipe]) => {
                       setRecipe(recipe);
@@ -588,7 +620,11 @@ export const Recipe: React.FunctionComponent = () => {
                               params.id,
                               "steps",
                               [...recipe.steps.slice(0, index + 1), "", ...recipe.steps.slice(index + 1)],
-                              [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                              {
+                                ingredients: [], // dont need to update the ingredients for step because steps are not saved in ingredients
+                                categories: recipe.categories,
+                                name: recipe.name
+                              }
                             ).then(recipe => {
                               setUpdateStep("");
                               setRecipe(recipe);
@@ -604,7 +640,11 @@ export const Recipe: React.FunctionComponent = () => {
                               params.id,
                               "steps",
                               [...recipe.steps.slice(0, index), ...recipe.steps.slice(index + 1)],
-                              [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                              {
+                                ingredients: [], // dont need to update the ingredients for step because steps are not saved in ingredients
+                                categories: recipe.categories,
+                                name: recipe.name
+                              }
                             ).then(recipe => {
                               setUpdateStep("");
                               setRecipe(recipe);
@@ -624,7 +664,11 @@ export const Recipe: React.FunctionComponent = () => {
                           params.id,
                           "steps",
                           [...recipe.steps.slice(0, index), value, ...recipe.steps.slice(index + 1)],
-                          [] // dont need to update the ingredients for step because steps are not saved in ingredients
+                          {
+                            ingredients: [], // dont need to update the ingredients for step because steps are not saved in ingredients
+                            categories: recipe.categories,
+                            name: recipe.name
+                          }
                         ).then(recipe => {
                           setRecipe(recipe);
                         });
