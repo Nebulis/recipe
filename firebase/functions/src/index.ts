@@ -15,9 +15,13 @@ const s3 = new AWS.S3({
 const app = express();
 app.use(
   cors({
-    origin: function(origin, callback) {
+    origin: function(origin: string, callback) {
       console.log(origin);
-      if (origin === "http://localhost:3000" || origin?.endsWith("recipe-maillet.netlify.com")) {
+      if (
+        origin === "http://localhost:3000" ||
+        origin?.endsWith("recipe-maillet.netlify.com") ||
+        (origin?.endsWith("gitpod.io") && origin.includes("3000-nebulis-recipe"))
+      ) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
