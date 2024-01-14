@@ -1,4 +1,4 @@
-import * as firebase from 'firebase/app';
+import { User } from "firebase/auth";
 import React, { Component } from "react";
 import { UserContext } from "./Connexion/UserContext";
 import { BrowserRouter, NavLink, Route, Switch } from "react-router-dom";
@@ -7,10 +7,10 @@ import { Home } from "./HomePage/Home";
 import { Recipe } from "./RecipePage/Recipe";
 import { IngredientProvider } from "./IngredientProvider";
 import { RecipeProvider } from "./RecipeProvider";
-import { Admin } from './AdminPage/Admin';
+import { Admin } from "./AdminPage/Admin";
 
 interface IAppState {
-  user?: firebase.User;
+  user?: User;
 }
 
 export class App extends Component<{}, IAppState> {
@@ -53,7 +53,8 @@ export class App extends Component<{}, IAppState> {
                       >
                         Add
                       </NavLink>
-                    </li><li className="ml-6">
+                    </li>
+                    <li className="ml-6">
                       <NavLink
                         to="/admin"
                         exact
