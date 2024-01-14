@@ -410,7 +410,7 @@ export const Add = () => {
               }
               const data = new FormData();
               data.append("file", imageFile);
-              const imageUrl = await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload`, {
+              const imageUrl = await fetch(`/.netlify/functions/upload`, {
                 method: "POST",
                 body: data,
                 headers: {
