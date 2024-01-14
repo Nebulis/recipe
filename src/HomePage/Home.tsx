@@ -109,6 +109,14 @@ export const Home: React.FunctionComponent = () => {
     setRunSearch(true);
   }, [status]);
 
+  const reset = useCallback(() => {
+    if (status === "LOADING") return;
+    nameInput.onChange({ target: { value: "" } });
+    setRecipes([]);
+    setPaginate("");
+    setRunSearch(true);
+  }, [status]);
+
   const { ingredients } = useContext(IngredientContext);
   const [inputItems, setInputItems] = useState(ingredients);
   const {
@@ -287,6 +295,17 @@ export const Home: React.FunctionComponent = () => {
               </>
             )}
           </button>
+          {searchType === "BY_TITLE" && Boolean(nameInput.value) && (status === "FINISHED" || status === "SUCCESS") && (
+            <button
+              className={`bg-transparent font-semibold py-2 px-3 border hover:border-transparent rounded border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center mb-3`}
+              style={{ height: "46px" }}
+              onClick={() => {
+                reset();
+              }}
+            >
+              Reset
+            </button>
+          )}
         </div>
       </div>
       {searchType === "BY_TITLE" && (
