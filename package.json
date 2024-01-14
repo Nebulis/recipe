@@ -4,7 +4,7 @@
   "private": true,
   "dependencies": {
     "downshift": "^5.0.4",
-    "firebase": "^7.11.0",
+    "firebase": "10.7.1",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-router-dom": "^5.1.2"

@@ -6,13 +6,14 @@ import {
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
-import * as firebase from "firebase/app";
+import { serverTimestamp } from "firebase/firestore";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
 import { categories, generateSearch, normalize, units, wait } from "../utils";
 import { IngredientContext } from "../IngredientProvider";
 import { Input, Select, Textarea, useInput } from "../Common/Input";
 import { useHistory } from "react-router-dom";
+import { arrayUnion, doc, writeBatch } from "firebase/firestore";
 interface IngredientType {
   id: string;
   name: string;
@@ -434,16 +435,16 @@ export const Add = () => {
                 serves: Number(servesInput.value),
                 calories: Number(caloriesInput.value),
                 categories: selectedCategories,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: serverTimestamp(),
                 search: generateSearch(nameInput.value, selectedCategories),
                 imageUrl,
                 steps: steps.map(step => step.step).filter(Boolean) // remove empty steps
               };
               const { steps: _, search: _2, ...recipeForIngredients } = recipe;
 
-              const batch = database.batch();
+              const batch = writeBatch(database);
               // add the recipe
-              const recipeRef = database.collection(RECIPES_COLLECTION).doc(recipeId);
+              const recipeRef = doc(database, RECIPES_COLLECTION, recipeId);
               batch.set(recipeRef, recipe);
 
               recipeIngredients
@@ -459,11 +460,17 @@ export const Add = () => {
                   const ingredientId = normalize(ingredient.name);
 
                   // add the ingredients in the recipe
-                  const recipeIngredientRef = recipeRef.collection(INGREDIENTS_COLLECTION).doc(ingredientId);
+                  const recipeIngredientRef = doc(
+                    database,
+                    RECIPES_COLLECTION,
+                    recipeId,
+                    INGREDIENTS_COLLECTION,
+                    ingredientId
+                  );
                   batch.set(recipeIngredientRef, ingredient);
 
                   // add the recipe to the ingredient collection
-                  const ingredientRef = database.collection(INGREDIENTS_COLLECTION).doc(ingredientId);
+                  const ingredientRef = doc(database, INGREDIENTS_COLLECTION, ingredientId);
                   batch.set(
                     ingredientRef,
                     { name: ingredient.name, [recipeId]: recipeForIngredients },
@@ -471,8 +478,8 @@ export const Add = () => {
                   );
 
                   // add the ingredient
-                  const ingredientListRef = database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients");
-                  batch.update(ingredientListRef, { value: firebase.firestore.FieldValue.arrayUnion(ingredient.name) });
+                  const ingredientListRef = doc(database, INGREDIENTS_LIST_COLLECTION, "ingredients");
+                  batch.update(ingredientListRef, { value: arrayUnion(ingredient.name) });
                 });
               batch
                 .commit()

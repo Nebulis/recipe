@@ -1,6 +1,13 @@
-import * as firebase from 'firebase/app';
-import "firebase/auth";
-import "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  setPersistence,
+  browserSessionPersistence
+} from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
 const config = {
   apiKey: "AIzaSyCYC4F66N57djADFvaz5i30cAaYVzWqq1o",
@@ -11,22 +18,21 @@ const config = {
   storageBucket: "recipes-ebe53.appspot.com"
 };
 
-firebase.initializeApp(config);
+const app = initializeApp(config);
+const auth = getAuth();
 
-const provider = new firebase.auth.GoogleAuthProvider();
+const provider = new GoogleAuthProvider();
 
 export const login = () => {
-  return firebase
-    .auth()
-    .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-    .then(() => firebase.auth().signInWithPopup(provider))
+  return setPersistence(auth, browserSessionPersistence)
+    .then(() => signInWithPopup(auth, provider))
     .catch(error => {
       // TODO
     });
 };
 
 export const logout = () => {
-  return firebase.auth().signOut();
+  return signOut(auth);
 };
 
 // this collection stores recipes associated to ingredients
@@ -35,4 +41,4 @@ export const INGREDIENTS_COLLECTION = "ingredients";
 export const INGREDIENTS_LIST_COLLECTION = "references";
 // this collections stores recipes and ingredients
 export const RECIPES_COLLECTION = "recipes";
-export const database = firebase.firestore();
+export const database = getFirestore(app);

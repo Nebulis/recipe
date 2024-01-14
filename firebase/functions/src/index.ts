@@ -15,7 +15,7 @@ const s3 = new AWS.S3({
 const app = express();
 app.use(
   cors({
-    origin: function(origin: string, callback) {
+    origin: function(origin: string | undefined, callback: any) {
       console.log(origin);
       if (
         origin === "http://localhost:3000" ||
@@ -32,7 +32,7 @@ app.use(
 
 const Bucket = "recipe-lma";
 app.use(fileParser);
-app.post("/", (req, res) => {
+app.post("/", (req: any, res: any) => {
   const file = isArray(req.files) ? req.files[0] : undefined;
   if (!file) {
     res.status(500).send({ message: "Unable to parse the file" });
@@ -48,27 +48,27 @@ app.post("/", (req, res) => {
   };
   s3.upload(params)
     .promise()
-    .then(data => {
+    .then((data: any) => {
       console.log(data);
       res.json({ url: data.Location });
     })
-    .catch(e => {
+    .catch((e: any) => {
       console.error(e);
       res.status(500).json(e);
     });
 });
-app.delete("/:id", (req, res) => {
+app.delete("/:id", (req: any, res: any) => {
   const params: AWS.S3.DeleteObjectRequest = {
     Bucket,
     Key: req.params.id
   };
   s3.deleteObject(params)
     .promise()
-    .then(data => {
+    .then((data: any) => {
       console.log(data);
       res.json({ message: "ok" });
     })
-    .catch(e => {
+    .catch((e: any) => {
       console.error(e);
       res.status(500).json(e);
     });

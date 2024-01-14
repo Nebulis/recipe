@@ -10,7 +10,7 @@ import {
   RECIPES_COLLECTION
 } from "../firebase/configuration";
 import { normalize, wait } from "../utils";
-import * as firebase from 'firebase/app';
+import { arrayRemove, arrayUnion, doc, getDoc, writeBatch } from "firebase/firestore";
 import { Status } from "../type";
 
 interface IngredientCombobox {
@@ -172,36 +172,30 @@ export const Admin = () => {
             style={{ height: "46px" }}
             onClick={async () => {
               setStatus("LOADING");
-              const batch = database.batch();
+              const batch = writeBatch(database);
 
               const normalizedFrom = normalize(from);
               const normalizedTo = normalize(to);
 
               // fetch FROM ingredient
-              const ingredientFrom = await database
-                .collection(INGREDIENTS_COLLECTION)
-                .doc(normalizedFrom)
-                .get()
-                .then(snapshot => snapshot.data());
+              const ingredientFromSnapshot = await getDoc(doc(database, INGREDIENTS_COLLECTION, normalizedFrom));
 
-              if (!ingredientFrom) {
+              if (!ingredientFromSnapshot.exists()) {
                 setStatus("ERROR");
                 setError(`Ingredient ${from} you want to update does not exist`);
                 return;
               }
+
+              const ingredientFrom = ingredientFromSnapshot.data();
               // fetch TO ingredient
-              const ingredientTo = await database
-                .collection(INGREDIENTS_COLLECTION)
-                .doc(normalizedTo)
-                .get()
-                .then(snapshot => snapshot.data());
+              const ingredientToSnapshot = await getDoc(doc(database, INGREDIENTS_COLLECTION, normalizedTo));
 
               // transfer recipes fromIngredient from to toIngredient
-              const ingredientRefTo = database.collection(INGREDIENTS_COLLECTION).doc(normalizedTo);
-              const ingredientRefFrom = database.collection(INGREDIENTS_COLLECTION).doc(normalizedFrom);
+              const ingredientRefTo = doc(database, INGREDIENTS_COLLECTION, normalizedTo);
+              const ingredientRefFrom = doc(database, INGREDIENTS_COLLECTION, normalizedFrom);
               const { name, ...recipes } = ingredientFrom;
 
-              if (ingredientTo) {
+              if (ingredientToSnapshot.exists()) {
                 batch.update(ingredientRefTo, recipes);
               } else {
                 batch.set(ingredientRefTo, { ...ingredientFrom, name: to });
@@ -212,32 +206,36 @@ export const Admin = () => {
 
               // rename ingredient in recipes
               for (const recipe in recipes) {
-                const recipeIngredientFromRef = database
-                  .collection(RECIPES_COLLECTION)
-                  .doc(recipe)
-                  .collection(INGREDIENTS_COLLECTION)
-                  .doc(normalizedFrom);
-                const recipeIngredientToRef = database
-                  .collection(RECIPES_COLLECTION)
-                  .doc(recipe)
-                  .collection(INGREDIENTS_COLLECTION)
-                  .doc(normalizedTo);
+                const recipeIngredientFromRef = doc(
+                  database,
+                  RECIPES_COLLECTION,
+                  recipe,
+                  INGREDIENTS_COLLECTION,
+                  normalizedFrom
+                );
+                const recipeIngredientToRef = doc(
+                  database,
+                  RECIPES_COLLECTION,
+                  recipe,
+                  INGREDIENTS_COLLECTION,
+                  normalizedTo
+                );
 
-                const recipeIngredient = await recipeIngredientFromRef.get().then(snapshot => snapshot.data());
+                const recipeIngredient = (await getDoc(recipeIngredientFromRef)).data();
 
                 batch.set(recipeIngredientToRef, { ...recipeIngredient, name: to });
                 batch.delete(recipeIngredientFromRef); // this is suspicious .... :) shouldnt it run BEFORE ??
               }
 
               // remove FROM from the list
-              batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
-                value: firebase.firestore.FieldValue.arrayRemove(from)
+              batch.update(doc(database, INGREDIENTS_LIST_COLLECTION, "ingredients"), {
+                value: arrayRemove(from)
               });
 
               // add TO to the list
-              if (!ingredientTo) {
-                batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
-                  value: firebase.firestore.FieldValue.arrayUnion(to)
+              if (!ingredientToSnapshot.exists) {
+                batch.update(doc(database, INGREDIENTS_LIST_COLLECTION, "ingredients"), {
+                  value: arrayUnion(to)
                 });
               }
 

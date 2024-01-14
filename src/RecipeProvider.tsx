@@ -6,7 +6,7 @@ import {
   RECIPES_COLLECTION
 } from "./firebase/configuration";
 import { Recipe, RecipeIngredient, RecipeWithIngredient, Unit } from "./type";
-import * as firebase from "firebase/app";
+import { arrayUnion, collection, deleteField, doc, getDoc, getDocs, updateDoc, writeBatch } from "firebase/firestore";
 import { generateSearch, normalize } from "./utils";
 
 const initialRecipes: { [key: string]: RecipeWithIngredient } = {
@@ -76,63 +76,48 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
   const getRecipe = useCallback((id: string) => recipes[id], [recipes]);
   const updateIngredient = useCallback(
     (id: string, ingredientId: string, quantity: number, unit: Unit) => {
-      return database
-        .collection(RECIPES_COLLECTION)
-        .doc(id)
-        .collection(INGREDIENTS_COLLECTION)
-        .doc(ingredientId)
-        .update({ quantity, unit })
-        .then(() => {
-          const newIngregients = recipes[id].ingredients.map(ingredient => {
-            if (ingredient.id === ingredientId) {
-              return {
-                ...ingredient,
-                quantity,
-                unit
-              };
-            } else {
-              return ingredient;
-            }
-          });
-
-          const newRecipe = {
-            ...recipes[id],
-            ingredients: newIngregients
-          };
-          setRecipes({ ...recipes, [id]: newRecipe });
-          return newRecipe;
+      const ref = doc(database, RECIPES_COLLECTION, id, INGREDIENTS_COLLECTION, ingredientId);
+      return updateDoc(ref, { quantity, unit }).then(() => {
+        const newIngregients = recipes[id].ingredients.map(ingredient => {
+          if (ingredient.id === ingredientId) {
+            return {
+              ...ingredient,
+              quantity,
+              unit
+            };
+          } else {
+            return ingredient;
+          }
         });
+        const newRecipe = {
+          ...recipes[id],
+          ingredients: newIngregients
+        };
+        setRecipes({ ...recipes, [id]: newRecipe });
+        return newRecipe;
+      });
     },
     [recipes]
   );
   const addIngredient = useCallback(
     (id: string, name: string, quantity: number, unit: Unit) => {
-      const batch = database.batch();
+      const batch = writeBatch(database);
       const ingredientId = normalize(name);
       const { steps: _, search: _2, ingredients: _3, ...recipeForIngredients } = recipes[id];
+      batch.set(doc(database, RECIPES_COLLECTION, id, INGREDIENTS_COLLECTION, ingredientId), {
+        name,
+        quantity,
+        unit
+      });
       batch.set(
-        database
-          .collection(RECIPES_COLLECTION)
-          .doc(id)
-          .collection(INGREDIENTS_COLLECTION)
-          .doc(ingredientId),
-        {
-          name,
-          quantity,
-          unit
-        }
-      );
-      batch.set(
-        database.collection(INGREDIENTS_COLLECTION).doc(ingredientId),
+        doc(database, INGREDIENTS_COLLECTION, ingredientId),
         { name, [id]: recipeForIngredients },
         { merge: true }
       );
-
       // TODO need to update the cache on new ingredient
-      batch.update(database.collection(INGREDIENTS_LIST_COLLECTION).doc("ingredients"), {
-        value: firebase.firestore.FieldValue.arrayUnion(name)
+      batch.update(doc(database, INGREDIENTS_LIST_COLLECTION, "ingredients"), {
+        value: arrayUnion(name)
       });
-
       return batch.commit().then(() => {
         const newRecipe = {
           ...recipes[id],
@@ -154,21 +139,13 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
   );
   const deleteIngredient = useCallback(
     (id: string, ingredientId: string) => {
-      const batch = database.batch();
-      batch.delete(
-        database
-          .collection(RECIPES_COLLECTION)
-          .doc(id)
-          .collection(INGREDIENTS_COLLECTION)
-          .doc(ingredientId)
-      );
-      batch.update(database.collection(INGREDIENTS_COLLECTION).doc(ingredientId), {
-        [id]: firebase.firestore.FieldValue.delete()
+      const batch = writeBatch(database);
+      batch.delete(doc(database, RECIPES_COLLECTION, id, INGREDIENTS_COLLECTION, ingredientId));
+      batch.update(doc(database, INGREDIENTS_COLLECTION, ingredientId), {
+        [id]: deleteField()
       });
-
       return batch.commit().then(() => {
         const newIngredients = recipes[id].ingredients.filter(ingredient => ingredient.id !== ingredientId);
-
         const newRecipe = {
           ...recipes[id],
           ingredients: newIngredients
@@ -195,21 +172,19 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
         name: string;
       }
     ) => {
-      const batch = database.batch();
-      batch.update(database.collection(RECIPES_COLLECTION).doc(id), { [key]: value });
+      const batch = writeBatch(database);
+      batch.update(doc(database, RECIPES_COLLECTION, id), { [key]: value });
       if (key === "name" || key === "categories") {
-        batch.update(database.collection(RECIPES_COLLECTION).doc(id), { search: generateSearch(name, categories) });
+        batch.update(doc(database, RECIPES_COLLECTION, id), { search: generateSearch(name, categories) });
       }
-
       ingredients.forEach(ingredient => {
-        batch.update(database.collection(INGREDIENTS_COLLECTION).doc(ingredient.id), { [`${id}.${key}`]: value });
+        batch.update(doc(database, INGREDIENTS_COLLECTION, ingredient.id), { [`${id}.${key}`]: value });
       });
       return batch.commit().then(() => {
         const newRecipe = {
           ...recipes[id],
           [key]: value
         };
-
         setRecipes({ ...recipes, [id]: newRecipe });
         return newRecipe;
       });
@@ -219,15 +194,8 @@ export const RecipeProvider: React.FunctionComponent = ({ children }) => {
   const loadRecipe = useCallback(
     (id: string) => {
       return Promise.all([
-        database
-          .collection(RECIPES_COLLECTION)
-          .doc(id)
-          .get(),
-        database
-          .collection(RECIPES_COLLECTION)
-          .doc(id)
-          .collection(INGREDIENTS_COLLECTION)
-          .get()
+        getDoc(doc(collection(database, RECIPES_COLLECTION), id)),
+        getDocs(collection(database, RECIPES_COLLECTION, id, INGREDIENTS_COLLECTION))
       ]).then(([recipeSnapshot, ingredientsSnapshot]) => {
         const recipe: RecipeWithIngredient = {
           // @ts-ignore

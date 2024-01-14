@@ -67,5 +67,5 @@ const normalizeCategory = (category: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()}`;
 
-export const categories = ["Matin", "Midi", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert", "Semaine", "Week-End"];
+export const categories = ["Matin", "Soir", "Cookeo", "Batch", "Apéritif", "Dessert", "Semaine", "Week-End"];
 export const normalizedCategories = categories.map(category => ({ id: normalizeCategory(category), title: category }));

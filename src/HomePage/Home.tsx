@@ -7,6 +7,7 @@ import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebas
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
 import { useCombobox } from "downshift";
+import { collection, getDocs, query, orderBy, limit, startAfter, where, DocumentData, Query } from "firebase/firestore";
 
 interface RecipeCardProps extends Recipe {
   name: string;
@@ -134,43 +135,41 @@ export const Home: React.FunctionComponent = () => {
   useEffect(() => {
     if (!runSearch) return;
     setStatus("LOADING");
-    const getRecipeFromRecipes = () => {
-      let ref = database.collection(RECIPES_COLLECTION).orderBy("name");
+    const getRecipeFromRecipes = async () => {
+      const ref = collection(database, RECIPES_COLLECTION);
+      let first: Query<DocumentData, DocumentData>;
       if (nameInput.value || selectedCategories.length > 0) {
-        ref = ref.where(
+        const whereClause = where(
           "search",
           "array-contains-any",
           [nameInput.value.toLowerCase(), ...selectedCategories].filter(Boolean)
         );
+        first = query(ref, whereClause, orderBy("name"), limit(LIMIT), startAfter(paginate));
+      } else {
+        first = query(ref, orderBy("name"), limit(LIMIT), startAfter(paginate));
       }
-      return ref
-        .startAfter(paginate)
-        .limit(LIMIT)
-        .get()
-        .then(snapshot => {
-          return snapshot.docs.map(recipe => {
-            return {
-              ...recipe.data(),
-              id: recipe.id
-            } as Recipe;
-          });
-        });
+
+      const snapshot = await getDocs(first);
+      return snapshot.docs.map(recipe => {
+        return {
+          ...recipe.data(),
+          id: recipe.id
+        } as Recipe;
+      });
     };
 
-    const getRecipeFromIngredients = () =>
-      database
-        .collection(INGREDIENTS_COLLECTION)
-        .where("name", "==", searchIngredient)
-        .get()
-        .then(snapshot => {
-          const data = snapshot.docs[0].data();
-          const recipes: Recipe[] = [];
-          for (const key in data) {
-            if (key === "name") continue;
-            recipes.push({ id: key, ...data[key] });
-          }
-          return recipes;
-        });
+    const getRecipeFromIngredients = async () => {
+      const ref = collection(database, INGREDIENTS_COLLECTION);
+      const first = query(ref, where("name", "==", searchIngredient));
+      const snapshot = await getDocs(first);
+      const data = snapshot.docs[0].data();
+      const recipes: Recipe[] = [];
+      for (const key in data) {
+        if (key === "name") continue;
+        recipes.push({ id: key, ...data[key] });
+      }
+      return recipes;
+    };
 
     Promise.all([
       searchType === "BY_INGREDIENT" && searchIngredient ? getRecipeFromIngredients() : getRecipeFromRecipes(),
@@ -301,7 +300,7 @@ export const Home: React.FunctionComponent = () => {
                       ? selectedCategories.filter(selectedCategory => selectedCategory !== category.id)
                       : [...selectedCategories, category.id]
                   );
-                  search()
+                  search();
                 }}
                 key={category.id}
                 className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold mr-2 mt-2 border-2 border-solid border-pink-600 cursor-pointer
