@@ -115,7 +115,7 @@ export const Home: React.FunctionComponent = () => {
     setRecipes([]);
     setPaginate("");
     setRunSearch(true);
-  }, [status]);
+  }, [status, nameInput]);
 
   const { ingredients } = useContext(IngredientContext);
   const [inputItems, setInputItems] = useState(ingredients);
