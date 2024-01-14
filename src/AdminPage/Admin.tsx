@@ -13,13 +13,18 @@ import { normalize, wait } from "../utils";
 import { arrayRemove, arrayUnion, doc, getDoc, writeBatch } from "firebase/firestore";
 import { Status } from "../type";
 
-interface IngredientCombobox {
+interface IngredientComboboxProps {
   label: string;
   id: string;
   ingredients: string[];
   onValueChange: (value: string) => void;
 }
-const IngredientCombobox: React.FunctionComponent<IngredientCombobox> = ({ ingredients, label, onValueChange, id }) => {
+const IngredientCombobox: React.FunctionComponent<IngredientComboboxProps> = ({
+  ingredients,
+  label,
+  onValueChange,
+  id
+}) => {
   const [fromItems, setFromItems] = useState(ingredients);
   const {
     isOpen,
