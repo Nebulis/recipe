@@ -12,6 +12,26 @@ import { getAuth } from "firebase/auth";
 import { Connexion } from "./Connexion/Connexion";
 
 const auth = getAuth();
+
+let fakeUser: User | null = null;
+// fakeUser = {
+//   uid: "abcdef",
+//   email: "aaa@gmail.com",
+//   emailVerified: true,
+//   displayName: "Nebounet84",
+//   isAnonymous: false,
+//   photoURL: "https://lh3.googleusercontent.com/a-/AAuE7mCdTQTyvbsurMjpTQ-gktLCaozRvVcMESh4DSmF",
+//   providerData: [
+//     {
+//       providerId: "google.com",
+//       uid: "sqdqsdqsd",
+//       displayName: "Nebounet84",
+//       email: "aaa@gmail.com",
+//       phoneNumber: null,
+//       photoURL: "https://lh3.googleusercontent.com/a/ACg8ocL20B1FZTePSH4q8ak8ENoP5h0GbG1xjzKIpcOhkO2FVg=s96-c"
+//     }
+//   ]
+// };
 interface IAppState {
   user: User | null;
 }
@@ -20,10 +40,10 @@ export class App extends Component<{}, IAppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      user: auth.currentUser
+      user: fakeUser || auth.currentUser
     };
 
-    auth.onAuthStateChanged(user => this.setState({ user: user || null }));
+    auth.onAuthStateChanged(user => this.setState({ user: fakeUser || user || null }));
   }
 
   public render() {
