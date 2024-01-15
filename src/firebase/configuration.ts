@@ -26,8 +26,8 @@ const provider = new GoogleAuthProvider();
 export const login = () => {
   return setPersistence(auth, browserSessionPersistence)
     .then(() => signInWithPopup(auth, provider))
-    .catch(error => {
-      // TODO
+    .catch((error: unknown) => {
+      console.log(error);
     });
 };
 

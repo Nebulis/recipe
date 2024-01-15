@@ -8,21 +8,22 @@ import { Recipe } from "./RecipePage/Recipe";
 import { IngredientProvider } from "./IngredientProvider";
 import { RecipeProvider } from "./RecipeProvider";
 import { Admin } from "./AdminPage/Admin";
+import { getAuth } from "firebase/auth";
+import { Connexion } from "./Connexion/Connexion";
 
+const auth = getAuth();
 interface IAppState {
-  user?: User;
+  user: User | null;
 }
 
 export class App extends Component<{}, IAppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      user: undefined
+      user: auth.currentUser
     };
 
-    // firebase
-    //   .auth()
-    //   .onAuthStateChanged(user => this.setState({ user: user || undefined }));
+    auth.onAuthStateChanged(user => this.setState({ user: user || null }));
   }
 
   public render() {
@@ -32,9 +33,9 @@ export class App extends Component<{}, IAppState> {
           <IngredientProvider>
             <RecipeProvider>
               <header className="h-20 bg-purple-900 text-white">
-                <nav className="flex h-full items-end">
+                <nav className="flex h-full items-center justify-between px-4">
                   <ul className="flex mb-2">
-                    <li className="ml-6">
+                    <li>
                       <NavLink
                         to="/"
                         exact
@@ -65,22 +66,27 @@ export class App extends Component<{}, IAppState> {
                       </NavLink>
                     </li>
                   </ul>
+                  <Connexion />
                 </nav>
               </header>
-              <Switch>
-                <Route path="/add">
-                  <Add />
-                </Route>
-                <Route path="/admin">
-                  <Admin />
-                </Route>
-                <Route path="/recipe/:id">
-                  <Recipe />
-                </Route>
-                <Route>
-                  <Home />
-                </Route>
-              </Switch>
+              {this.state.user ? (
+                <Switch>
+                  <Route path="/add">
+                    <Add />
+                  </Route>
+                  <Route path="/admin">
+                    <Admin />
+                  </Route>
+                  <Route path="/recipe/:id">
+                    <Recipe />
+                  </Route>
+                  <Route>
+                    <Home />
+                  </Route>
+                </Switch>
+              ) : (
+                <div className="h-64 flex items-center justify-center">Please login</div>
+              )}
               <footer className="h-20 bg-purple-900 text-white" />
             </RecipeProvider>
           </IngredientProvider>
