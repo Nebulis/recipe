@@ -5,7 +5,7 @@ import {
   INGREDIENTS_LIST_COLLECTION,
   RECIPES_COLLECTION
 } from "../firebase/configuration";
-import { Image, Info, Plus, Save, Spinner, Times } from "../icon";
+import { ImageIcon, Info, Plus, Save, Spinner, Times } from "../icon";
 import { serverTimestamp } from "firebase/firestore";
 import { useCombobox } from "downshift";
 import { NewRecipe, Status } from "../type";
@@ -247,8 +247,45 @@ export const Add = () => {
 
   const handleFiles = (files: FileList | null) => {
     if (fileRef.current && files && files.length === 1) {
-      setImageFile(files[0]);
-      setImageUrl(URL.createObjectURL(files[0]));
+      const file = files[0];
+      const reader = new FileReader();
+      //Read the contents of Image File.
+      reader.readAsDataURL(file);
+      reader.onload = function(readerEvent) {
+        //Initiate the JavaScript Image object.
+        const image = new Image();
+
+        const loadedFile = readerEvent.target?.result;
+        //Set the Base64 string return from FileReader as source.
+        image.src = typeof loadedFile === "string" ? loadedFile : "";
+
+        //Validate the File Height and Width.
+        // @ts-expect-error
+        image.onload = function(this: HTMLImageElement) {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const maxWidth = 1200;
+          if (this.width <= maxWidth) {
+            setImageFile(file);
+            setImageUrl(URL.createObjectURL(file));
+            return;
+          }
+          const ratio = 1200 / this.width;
+
+          // Set width and height
+          canvas.width = this.width * ratio;
+          canvas.height = this.height * ratio;
+
+          // Draw image and export to a data-uri
+          ctx?.drawImage(image, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            if (!blob) throw new Error("Oops");
+            let newFile = new File([blob], file.name, { type: file.type });
+            setImageFile(newFile);
+            setImageUrl(URL.createObjectURL(newFile));
+          }, "image/jpeg");
+        };
+      };
     }
   };
 
@@ -279,7 +316,7 @@ export const Add = () => {
             className="px-3 cursor-pointer w-40 h-40 self-center items-center justify-center flex"
             onClick={() => fileRef.current && fileRef.current.click()}
           >
-            {imageUrl ? <img src={imageUrl} alt="Recipe" /> : <Image className="fill-current w-full h-full" />}
+            {imageUrl ? <img src={imageUrl} alt="Recipe" /> : <ImageIcon className="fill-current w-full h-full" />}
           </div>
           <div className="flex-grow flex">
             <div className=" w-10/12 px-3 justify-center flex flex-col">

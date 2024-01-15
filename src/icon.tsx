@@ -42,7 +42,7 @@ export const Info: FunctionComponent<{ className?: string }> = ({ className = "f
   </svg>
 );
 
-export const Image: FunctionComponent<{ className?: string }> = ({ className = "fill-current w-4 h-4 mr-2" }) => (
+export const ImageIcon: FunctionComponent<{ className?: string }> = ({ className = "fill-current w-4 h-4 mr-2" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
