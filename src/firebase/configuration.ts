@@ -5,7 +5,7 @@ import {
   signInWithPopup,
   signOut,
   setPersistence,
-  browserSessionPersistence
+  browserLocalPersistence
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -24,7 +24,7 @@ const auth = getAuth();
 const provider = new GoogleAuthProvider();
 
 export const login = () => {
-  return setPersistence(auth, browserSessionPersistence)
+  return setPersistence(auth, browserLocalPersistence)
     .then(() => signInWithPopup(auth, provider))
     .catch((error: unknown) => {
       console.log(error);
