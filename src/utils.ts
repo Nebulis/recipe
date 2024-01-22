@@ -59,7 +59,7 @@ export const generateSearch = (value: string, categories: string[]): string[] =>
   return searches.concat(categories.map(normalizeCategory));
 };
 
-export const normalize = (value: string) => value.toLowerCase().replace(/ /g, "-");
+export const normalize = (value: string) => value.trim().toLowerCase().replace(/ /g, "-");
 
 const normalizeCategory = (category: string) =>
   `category-${category

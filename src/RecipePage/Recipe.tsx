@@ -164,7 +164,7 @@ const EditableIngredient: FunctionComponent<{
   const addOrUpdate = async () => {
     setStatus("LOADING");
     if (isNew) {
-      await Promise.all([onAdd(inputValue, Number(quantityInput.value), unitInput.value), wait(500)]);
+      await Promise.all([onAdd(inputValue.trim(), Number(quantityInput.value), unitInput.value), wait(500)]);
     } else {
       await Promise.all([onUpdate(Number(quantityInput.value), unitInput.value), wait(500)]);
       setStatus("SUCCESS"); // on onAdd this trigger no op error from React

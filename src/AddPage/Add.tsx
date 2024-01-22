@@ -489,7 +489,7 @@ export const Add = () => {
                 .filter(recipeIngredient => !!recipeIngredient.name) // remove empty ingredients of the recipe
                 .map(({ name, unit, quantity }) => {
                   return {
-                    name,
+                    name: name.trim(),
                     unit,
                     quantity: Number(quantity)
                   };
