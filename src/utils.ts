@@ -9,7 +9,7 @@ export const transformTime = (time: number) => {
   return time ? `${time}mins` : "-";
 };
 
-export const units: Unit[] = ["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece"];
+export const units: Unit[] = ["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece", "Pincée"];
 
 export const transformUnit = (quantity: number, unit: Unit) => {
   if (unit === "Gramme") {
@@ -59,7 +59,11 @@ export const generateSearch = (value: string, categories: string[]): string[] =>
   return searches.concat(categories.map(normalizeCategory));
 };
 
-export const normalize = (value: string) => value.trim().toLowerCase().replace(/ /g, "-");
+export const normalize = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/ /g, "-");
 
 const normalizeCategory = (category: string) =>
   `category-${category
