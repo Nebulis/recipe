@@ -333,7 +333,11 @@ export const Recipe: React.FunctionComponent = () => {
     if (!recipe) {
       const timer = wait(1000);
       Promise.all([loadRecipe(params.id), timer]).then(([recipe]) => {
-        setRecipe(recipe);
+        setRecipe({
+          ...recipe,
+          ingredients:
+            recipe.ingredients.length > 0 ? recipe.ingredients : [{ id: "", unit: "Gramme", quantity: 0, name: "" }]
+        });
         setStatus("SUCCESS");
       });
     }
