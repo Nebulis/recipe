@@ -47,15 +47,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   const quantityInput = useInput({ value: quantity });
   const unitInput = useInput({ value: unit });
 
-  const {
-    isOpen,
-    getMenuProps,
-    getInputProps,
-    getComboboxProps,
-    highlightedIndex,
-    getItemProps,
-    inputValue
-  } = useCombobox({
+  const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, inputValue } = useCombobox({
     initialInputValue: name,
     items: inputItems,
     onInputValueChange: ({ inputValue = "" }) => {
@@ -83,7 +75,7 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
   }, [inputValue, name, onIngredientUpdate, quantity, quantityInput.value, unit, unitInput.value, id]);
   return (
     <>
-      <div className="relative w-full sm:pr-0 sm:w-2/3 mb-6 sm:mb-0" {...getComboboxProps()}>
+      <div className="relative w-full sm:pr-0 sm:w-2/3 mb-6 sm:mb-0">
         <div className="">
           <Input
             label={
@@ -105,9 +97,9 @@ const Ingredient: React.FunctionComponent<IngredientProps> = ({
                 />
               </>
             }
-            id={`ingredient-name-${ingredientNumber}`}
             placeholder="Tomato"
             {...getInputProps()}
+            id={`ingredient-name-${ingredientNumber}`}
           />
         </div>
 

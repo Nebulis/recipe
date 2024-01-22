@@ -111,31 +111,21 @@ const EditableTextarea: FunctionComponent<{
     </span>
   );
 };
-const EditableIngredient: FunctionComponent<{
-  edit: boolean;
+
+const EditableIngredientElement: FunctionComponent<{
   ingredient: RecipeIngredient;
-  className?: string;
   onAdd: (name: string, quantity: number, unit: string) => Promise<any>;
   onUpdate: (quantity: number, unit: string) => Promise<any>;
   onDelete: () => void;
   onNew: () => void;
-}> = ({ ingredient, edit, className = "", onUpdate, onDelete, onNew, onAdd }) => {
+}> = ({ ingredient, onUpdate, onDelete, onNew, onAdd }) => {
   const [status, setStatus] = useState<Status>("INITIAL");
   const quantityInput = useInput({ value: String(ingredient.quantity) });
   const unitInput = useInput({ value: ingredient.unit });
   const isNew = ingredient.id === "";
   const { ingredients } = useContext(IngredientContext);
   const [inputItems, setInputItems] = useState(ingredients);
-
-  const {
-    isOpen,
-    getMenuProps,
-    getInputProps,
-    getComboboxProps,
-    highlightedIndex,
-    getItemProps,
-    inputValue
-  } = useCombobox({
+  const { isOpen, getMenuProps, getInputProps, highlightedIndex, getItemProps, inputValue } = useCombobox({
     initialInputValue: ingredient.name,
     items: inputItems,
     onInputValueChange: ({ inputValue = "" }) => {
@@ -156,10 +146,9 @@ const EditableIngredient: FunctionComponent<{
       setStatus("SUCCESS"); // on onAdd this trigger no op error from React
     }
   };
-
-  return edit ? (
+  return (
     <div className="flex flex-wrap flex justify-center px-3 sm:pr-3">
-      <div className="relative w-1/2 sm:pr-0 sm:mb-0" {...getComboboxProps()}>
+      <div className="relative w-1/2 sm:pr-0 sm:mb-0">
         <div className="">
           <Input
             inputClassName={`appearance-none block w-full text-black border rounded-l py-3 px-4 leading-tight focus:outline-none focus:bg-white ${
@@ -192,9 +181,9 @@ const EditableIngredient: FunctionComponent<{
                 />
               </>
             }
-            id={`ingredient-name-${ingredient.id}`}
             placeholder="Tomato"
             {...getInputProps()}
+            id={`ingredient-name-${ingredient.id}`}
           />
         </div>
         <div
@@ -254,6 +243,20 @@ const EditableIngredient: FunctionComponent<{
         </button>
       </div>
     </div>
+  );
+};
+
+const EditableIngredient: FunctionComponent<{
+  edit: boolean;
+  ingredient: RecipeIngredient;
+  className?: string;
+  onAdd: (name: string, quantity: number, unit: string) => Promise<any>;
+  onUpdate: (quantity: number, unit: string) => Promise<any>;
+  onDelete: () => void;
+  onNew: () => void;
+}> = ({ edit, className = "", ingredient, ...rest }) => {
+  return edit ? (
+    <EditableIngredientElement {...rest} ingredient={ingredient} />
   ) : (
     <span className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}>
       {transformUnit(ingredient.quantity, ingredient.unit)} {ingredient.name}

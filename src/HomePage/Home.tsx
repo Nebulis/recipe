@@ -6,7 +6,7 @@ import { categories, normalizedCategories, normalizeCategory, transformTime, wai
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
-import { useCombobox } from "downshift";
+import { useCombobox, useMultipleSelection } from "downshift";
 import { collection, getDocs, query, orderBy, limit, startAfter, where, DocumentData, Query } from "firebase/firestore";
 
 interface RecipeCardProps extends Recipe {
@@ -79,6 +79,24 @@ export const Home: React.FunctionComponent = () => {
   const [runSearch, setRunSearch] = useState(true);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const LIMIT = process.env.NODE_ENV === "development" ? 2 : 20;
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [searchedIngredient, setSearchedIngredient] = React.useState("");
+  const { getSelectedItemProps, getDropdownProps, removeSelectedItem } = useMultipleSelection({
+    selectedItems: selectedIngredients,
+    onStateChange({ selectedItems: newSelectedItems, type }) {
+      switch (type) {
+        case useMultipleSelection.stateChangeTypes.SelectedItemKeyDownBackspace:
+        case useMultipleSelection.stateChangeTypes.SelectedItemKeyDownDelete:
+        case useMultipleSelection.stateChangeTypes.DropdownKeyDownBackspace:
+        case useMultipleSelection.stateChangeTypes.FunctionRemoveSelectedItem:
+          setSelectedIngredients(newSelectedItems || []);
+          break;
+        default:
+          break;
+      }
+    }
+  });
+
   const [recipes, setRecipes] = useState<Recipe[]>([
     // {
     //   calories: 511,
@@ -118,26 +136,54 @@ export const Home: React.FunctionComponent = () => {
   }, [status, nameInput]);
 
   const { ingredients } = useContext(IngredientContext);
-  const [inputItems, setInputItems] = useState(ingredients);
+  const [selectableIngredients, setSelectableIngredients] = useState(ingredients);
+
+  const computeSelectableIngredients = (value: string, selectedIngredients: string[]) => {
+    const transformedSelectedIngredients = selectedIngredients.map(ingredient => ingredient.toLowerCase());
+    const selection = ingredients
+      .filter(ingredient => ingredient.toLowerCase().includes(value.toLowerCase()))
+      .filter(ingredient => !transformedSelectedIngredients.includes(ingredient.toLowerCase()))
+      .slice(0, 20);
+    // add the current item if he's not in the list
+    return selection.length > 0 ? selection : [value];
+  };
+
   const {
     isOpen,
     closeMenu,
     getMenuProps,
     getInputProps,
-    getComboboxProps,
     highlightedIndex,
     getItemProps,
     inputValue: searchIngredient
   } = useCombobox({
-    items: inputItems,
+    inputValue: searchedIngredient,
+    items: selectableIngredients,
+    defaultHighlightedIndex: 0, // after selection, highlight the first item.
+    selectedItem: null,
     onInputValueChange: ({ inputValue = "" }) => {
-      const selection = ingredients
-        .filter(ingredient => ingredient.toLowerCase().includes(inputValue.toLowerCase()))
-        .slice(0, 20);
-      // add the current item if he's not in the list
-      setInputItems(selection.length > 0 ? selection : [inputValue]);
+      setSelectableIngredients(computeSelectableIngredients(inputValue, selectedIngredients));
     },
-    onSelectedItemChange: search
+    onStateChange({ inputValue: newSearchedIngredient, type, selectedItem: newSelectedIngredient }) {
+      switch (type) {
+        case useCombobox.stateChangeTypes.InputKeyDownEnter:
+        case useCombobox.stateChangeTypes.ItemClick:
+        case useCombobox.stateChangeTypes.InputBlur:
+          if (newSelectedIngredient) {
+            setSelectedIngredients([...selectedIngredients, newSelectedIngredient]);
+            setSearchedIngredient("");
+            setSelectableIngredients(computeSelectableIngredients("", [...selectedIngredients, newSelectedIngredient]));
+          }
+          break;
+
+        case useCombobox.stateChangeTypes.InputChange:
+          setSearchedIngredient(newSearchedIngredient ?? "");
+
+          break;
+        default:
+          break;
+      }
+    }
   });
 
   useEffect(() => {
@@ -167,21 +213,27 @@ export const Home: React.FunctionComponent = () => {
     };
 
     const getRecipeFromIngredients = async () => {
-      if (!searchIngredient) return [];
+      if (selectedIngredients.length === 0) return [];
       const ref = collection(database, INGREDIENTS_COLLECTION);
-      const first = query(ref, where("name", "==", searchIngredient));
+      const first = query(ref, where("name", "in", selectedIngredients));
       const snapshot = await getDocs(first);
       const firstDoc = snapshot.docs[0];
       if (!firstDoc) return [];
-      const data = firstDoc.data();
+
+      const firstDocData = firstDoc.data();
+      const otherDocsData = [];
+      for (let i = 1; i < selectedIngredients.length; i++) {
+        otherDocsData[i] = snapshot.docs[i].data();
+      }
       const recipes: Recipe[] = [];
-      for (const key in data) {
+      for (const key in firstDocData) {
         if (key === "name") continue;
-        recipes.push({ id: key, ...data[key] });
+        if (otherDocsData.every(docData => docData[key])) {
+          recipes.push({ id: key, ...firstDocData[key] });
+        }
       }
       return recipes
         .filter(recipe => {
-          console.log(selectedCategories, recipe.categories);
           return (
             selectedCategories.length === 0 ||
             recipe.categories.some(category => selectedCategories.includes(normalizeCategory(category)))
@@ -210,8 +262,32 @@ export const Home: React.FunctionComponent = () => {
     <>
       <div className="mb-3 mt-3 flex justify-center">
         {searchType === "BY_INGREDIENT" ? (
-          <div className="w-1/5 relative" {...getComboboxProps()}>
-            {/*<Input id="search-by-name" {...nameInput} label="Name" placeholder="Name" />*/}
+          <div className="w-1/5 relative">
+            <div>
+              {selectedIngredients.map(function renderSelectedItem(selectedItemForRender, index) {
+                return (
+                  <span
+                    className="bg-gray-100 rounded-md px-1 focus:bg-red-400"
+                    key={`selected-item-${index}`}
+                    {...getSelectedItemProps({
+                      selectedItem: selectedItemForRender,
+                      index
+                    })}
+                  >
+                    {selectedItemForRender}
+                    <span
+                      className="px-1 cursor-pointer"
+                      onClick={e => {
+                        e.stopPropagation();
+                        removeSelectedItem(selectedItemForRender);
+                      }}
+                    >
+                      &#10005;
+                    </span>
+                  </span>
+                );
+              })}
+            </div>
             <div className="">
               <Input
                 label={
@@ -225,9 +301,9 @@ export const Home: React.FunctionComponent = () => {
                     />
                   </>
                 }
-                id={`search-by-ingredient`}
                 placeholder="Tomato"
-                {...getInputProps()}
+                {...getInputProps(getDropdownProps({ preventKeyAction: isOpen }))}
+                id={`search-by-ingredient`}
                 onKeyUp={async event => {
                   if (event.key === "Enter") {
                     closeMenu();
@@ -242,7 +318,7 @@ export const Home: React.FunctionComponent = () => {
               style={{ maxHeight: "10rem" }}
             >
               {isOpen &&
-                inputItems.map((item, index) => (
+                selectableIngredients.map((item, index) => (
                   <div
                     className={`pl-4 py-2 border-b border-gray-100 border-solid ${
                       highlightedIndex === index ? "bg-purple-700 text-white bold" : ""

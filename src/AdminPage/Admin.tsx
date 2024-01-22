@@ -26,16 +26,7 @@ const IngredientCombobox: React.FunctionComponent<IngredientComboboxProps> = ({
   id
 }) => {
   const [fromItems, setFromItems] = useState(ingredients);
-  const {
-    isOpen,
-    closeMenu,
-    getMenuProps,
-    getInputProps,
-    // getComboboxProps,
-    highlightedIndex,
-    getItemProps,
-    inputValue
-  } = useCombobox({
+  const { isOpen, closeMenu, getMenuProps, getInputProps, highlightedIndex, getItemProps, inputValue } = useCombobox({
     items: fromItems,
     onInputValueChange: ({ inputValue = "" }) => {
       const selection = ingredients
@@ -53,9 +44,9 @@ const IngredientCombobox: React.FunctionComponent<IngredientComboboxProps> = ({
       <div className="">
         <Input
           label={label}
-          id={id}
           placeholder="Tomato"
           {...getInputProps()}
+          id={id}
           onKeyUp={async event => {
             if (event.key === "Enter") {
               closeMenu();
