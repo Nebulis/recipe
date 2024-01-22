@@ -463,9 +463,10 @@ export const Add = () => {
 
               const timer = wait(2000);
 
-              const recipeId = normalize(nameInput.value);
+              const name = nameInput.value.trim();
+              const recipeId = normalize(name);
               const recipe: NewRecipe = {
-                name: nameInput.value,
+                name: name,
                 prepareTime: Number(prepareTimeInput.value),
                 cookTime: Number(cookTimeInput.value),
                 restTime: Number(restTimeInput.value),
@@ -473,7 +474,7 @@ export const Add = () => {
                 calories: Number(caloriesInput.value),
                 categories: selectedCategories,
                 createdAt: serverTimestamp(),
-                search: generateSearch(nameInput.value, selectedCategories),
+                search: generateSearch(name, selectedCategories),
                 imageUrl,
                 steps: steps.map(step => step.step).filter(Boolean) // remove empty steps
               };
