@@ -189,11 +189,6 @@ const Step: React.FunctionComponent<StepProps> = ({ onStepUpdate, step, stepNumb
           }
           id={step.id}
           placeholder="Fold whipped cream into mascarpone cream mixture.."
-          onKeyPress={event => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-            }
-          }}
           {...stepInput}
         />
       </div>

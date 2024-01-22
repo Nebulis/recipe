@@ -81,20 +81,6 @@ const EditableTextarea: FunctionComponent<{
         id={id}
         {...inputValue}
         autoFocus
-        onKeyUp={async event => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            setStatus("LOADING");
-            await Promise.all([onUpdate(inputValue.value), wait(500)]);
-            setDisplayInput(false);
-            setStatus("SUCCESS");
-          }
-        }}
-        onKeyPress={event => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-          }
-        }}
         inputClassName="appearance-none block w-full bg-white text-gray-700 border rounded-l py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
       />
       <button
