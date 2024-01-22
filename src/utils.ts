@@ -65,7 +65,7 @@ export const normalize = (value: string) =>
     .toLowerCase()
     .replace(/ /g, "-");
 
-const normalizeCategory = (category: string) =>
+export const normalizeCategory = (category: string) =>
   `category-${category
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

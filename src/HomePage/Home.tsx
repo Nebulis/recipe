@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Bolt, Clock, Info, Oven, Pause, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
-import { categories, normalizedCategories, transformTime, wait } from "../utils";
+import { categories, normalizedCategories, normalizeCategory, transformTime, wait } from "../utils";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
@@ -167,22 +167,30 @@ export const Home: React.FunctionComponent = () => {
     };
 
     const getRecipeFromIngredients = async () => {
+      if (!searchIngredient) return [];
       const ref = collection(database, INGREDIENTS_COLLECTION);
       const first = query(ref, where("name", "==", searchIngredient));
       const snapshot = await getDocs(first);
-      const data = snapshot.docs[0].data();
+      const firstDoc = snapshot.docs[0];
+      if (!firstDoc) return [];
+      const data = firstDoc.data();
       const recipes: Recipe[] = [];
       for (const key in data) {
         if (key === "name") continue;
         recipes.push({ id: key, ...data[key] });
       }
-      return recipes;
+      return recipes
+        .filter(recipe => {
+          console.log(selectedCategories, recipe.categories);
+          return (
+            selectedCategories.length === 0 ||
+            recipe.categories.some(category => selectedCategories.includes(normalizeCategory(category)))
+          );
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
     };
 
-    Promise.all([
-      searchType === "BY_INGREDIENT" && searchIngredient ? getRecipeFromIngredients() : getRecipeFromRecipes(),
-      wait(1500)
-    ])
+    Promise.all([searchType === "BY_INGREDIENT" ? getRecipeFromIngredients() : getRecipeFromRecipes(), wait(1500)])
       .then(([fetchedRecipes]) => {
         setRecipes(recipes => {
           return [...recipes, ...fetchedRecipes];
@@ -308,33 +316,31 @@ export const Home: React.FunctionComponent = () => {
           )}
         </div>
       </div>
-      {searchType === "BY_TITLE" && (
-        <div className="px-6 pt-2 mb-4 text-center flex justify-center">
-          {normalizedCategories.map(category => {
-            return (
-              <span
-                onClick={() => {
-                  setSelectedCategories(
-                    selectedCategories.includes(category.id)
-                      ? selectedCategories.filter(selectedCategory => selectedCategory !== category.id)
-                      : [...selectedCategories, category.id]
-                  );
-                  search();
-                }}
-                key={category.id}
-                className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold mr-2 mt-2 border-2 border-solid border-pink-600 cursor-pointer
+      <div className="px-6 pt-2 mb-4 text-center flex justify-center">
+        {normalizedCategories.map(category => {
+          return (
+            <span
+              onClick={() => {
+                setSelectedCategories(
+                  selectedCategories.includes(category.id)
+                    ? selectedCategories.filter(selectedCategory => selectedCategory !== category.id)
+                    : [...selectedCategories, category.id]
+                );
+                search();
+              }}
+              key={category.id}
+              className={`relative inline-flex items-center rounded-full px-2 py-1 text-sm font-semibold mr-2 mt-2 border-2 border-solid border-pink-600 cursor-pointer
                   ${
                     selectedCategories.includes(category.id)
                       ? "bg-pink-600 text-white hover:text-pink-600 hover:bg-white"
                       : "text-pink-600 hover:text-white hover:bg-pink-600"
                   }`}
-              >
-                {category.title}
-              </span>
-            );
-          })}
-        </div>
-      )}
+            >
+              {category.title}
+            </span>
+          );
+        })}
+      </div>
       {recipes.length > 0 && (
         <div className="grid xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mb-6 mt-6 px-3">
           {recipes.map(recipe => (

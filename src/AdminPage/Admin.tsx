@@ -86,7 +86,7 @@ const IngredientCombobox: React.FunctionComponent<IngredientComboboxProps> = ({
 };
 
 export const Admin = () => {
-  const { ingredients } = useContext(IngredientContext);
+  const { ingredients, refresh } = useContext(IngredientContext);
   const [status, setStatus] = useState<Status>("INITIAL");
   const [error, setError] = useState("");
   const [from, setFrom] = useState("");
@@ -250,6 +250,7 @@ export const Admin = () => {
                   setStatus("SUCCESS");
                   setFrom("");
                   setTo("");
+                  refresh();
                 })
                 .catch(error => {
                   setStatus("ERROR");
