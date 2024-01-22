@@ -9,7 +9,18 @@ export const transformTime = (time: number) => {
   return time ? `${time}mins` : "-";
 };
 
-export const units: Unit[] = ["Gramme", "Kg", "Litre", "Cl", "Ml", "C. à Soupe", "C. à Café", "Piece", "Pincée"];
+export const units: Unit[] = [
+  "Gramme",
+  "Kg",
+  "Litre",
+  "Cl",
+  "Ml",
+  "C. à Soupe",
+  "C. à Café",
+  "Piece",
+  "Pincée",
+  "Aucune"
+];
 
 export const transformUnit = (quantity: number, unit: Unit) => {
   if (unit === "Gramme") {
@@ -26,6 +37,8 @@ export const transformUnit = (quantity: number, unit: Unit) => {
     return `${quantity} C. à Soupe`;
   } else if (unit === "C. à Café") {
     return `${quantity} C. à Café`;
+  } else if (unit === "Aucune") {
+    return "";
   }
   return `${quantity}`;
 };
