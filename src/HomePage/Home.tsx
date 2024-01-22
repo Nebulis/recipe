@@ -155,7 +155,6 @@ export const Home: React.FunctionComponent = () => {
     getInputProps,
     highlightedIndex,
     getItemProps,
-    inputValue: searchIngredient
   } = useCombobox({
     inputValue: searchedIngredient,
     items: selectableIngredients,
