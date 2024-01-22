@@ -117,7 +117,9 @@ const EditableTextarea: FunctionComponent<{
           setDisplayInput(true);
         }
       }}
-      className={`${className} ${edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""}`}
+      className={`${className} whitespace-pre-line ${
+        edit ? "p-1 border-pink-600 border-2 border-dashed cursor-pointer" : ""
+      }`}
     >
       {displayedValue || value}
     </span>
