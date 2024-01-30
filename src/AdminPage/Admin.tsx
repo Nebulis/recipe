@@ -9,9 +9,9 @@ import {
   INGREDIENTS_LIST_COLLECTION,
   RECIPES_COLLECTION
 } from "../firebase/configuration";
-import { normalize, wait } from "../utils";
-import { arrayRemove, arrayUnion, doc, getDoc, writeBatch } from "firebase/firestore";
-import { Status } from "../type";
+import { generateSearch, normalize, wait } from "../utils";
+import { arrayRemove, arrayUnion, collection, doc, getDoc, getDocs, writeBatch } from "firebase/firestore";
+import { Recipe, Status } from "../type";
 
 interface IngredientComboboxProps {
   label: string;
@@ -116,7 +116,7 @@ export const Admin = () => {
     }
   }, [status]);
   return (
-    <div>
+    <div className="text-center">
       {status === "SUCCESS" && (
         <div
           className="flex items-center justify-center bg-green-500 text-white text-sm font-bold px-4 py-3"
@@ -254,6 +254,43 @@ export const Admin = () => {
           </button>
         </div>
       </div>
+      <hr className="w-full h-1 bg-pink-200 my-4" />
+
+      <button
+        className={`bg-transparent font-semibold py-2 border hover:border-transparent rounded mb-3 border-pink-800 text-white bg-pink-900 hover:bg-pink-800 inline-flex items-center justify-center mt-auto px-4 ${
+          status === "LOADING" ? "opacity-50" : ""
+        }`}
+        disabled={status === ("LOADING" as Status)}
+        onClick={async () => {
+          setStatus("LOADING");
+          const ref = collection(database, RECIPES_COLLECTION);
+          const snapshot = await getDocs(ref);
+          const allRecipes = snapshot.docs.map(recipe => {
+            return {
+              ...recipe.data(),
+              id: recipe.id
+            } as Recipe;
+          });
+
+          const batch = writeBatch(database);
+          for (const recipe of allRecipes) {
+            batch.update(doc(database, RECIPES_COLLECTION, recipe.id), {
+              search: generateSearch(recipe.name, recipe.categories)
+            });
+          }
+          batch
+            .commit()
+            .then(() => {
+              setStatus("SUCCESS");
+            })
+            .catch(error => {
+              setStatus("ERROR");
+              setError(error);
+            });
+        }}
+      >
+        Update search
+      </button>
     </div>
   );
 };

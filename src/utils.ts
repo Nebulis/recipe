@@ -51,13 +51,17 @@ export const wait = (timeout: number): Promise<number> => {
   });
 };
 
-export const generateSearch = (value: string, categories: string[]): string[] => {
-  const searches = value
+export const normalizeName = (value: string) =>
+  value
     .toLowerCase()
     .normalize("NFD") // https://stackoverflow.com/questions/990904/remove-accents-diacritics-in-a-string-in-javascript
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[-']/g, " ") // replace - and ' by space
-    .replace(/[^a-z ]/g, "") // keep letter and spaces
+    .replace(/[^a-z ]/g, ""); // keep letter and spaces
+
+export const generateSearch = (value: string, categories: string[]): string[] => {
+  const normalizedName = normalizeName(value);
+  const searchesByWords = normalizedName
     .split(" ")
     .filter(word => word.length > 2)
     .map(word => {
@@ -69,7 +73,12 @@ export const generateSearch = (value: string, categories: string[]): string[] =>
       return words;
     })
     .flat();
-  return searches.concat(categories.map(normalizeCategory));
+
+  const searchesByNameParts = [];
+  for (let i = 3; i <= normalizedName.length; i++) {
+    searchesByNameParts.push(normalizedName.substring(0, i));
+  }
+  return [...searchesByWords, ...categories.map(normalizeCategory), ...searchesByNameParts];
 };
 
 export const normalize = (value: string) =>

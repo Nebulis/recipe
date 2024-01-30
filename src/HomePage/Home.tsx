@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from "react";
 import { Bolt, Clock, Info, Oven, Pause, Search, Spinner, Sync, User } from "../icon";
 import { Link } from "react-router-dom";
 import { Recipe, Status } from "../type";
-import { categories, normalizedCategories, normalizeCategory, transformTime, wait } from "../utils";
+import { categories, normalizedCategories, normalizeCategory, transformTime, wait, normalizeName } from "../utils";
 import { database, INGREDIENTS_COLLECTION, RECIPES_COLLECTION } from "../firebase/configuration";
 import { Input, useInput } from "../Common/Input";
 import { IngredientContext } from "../IngredientProvider";
@@ -148,14 +148,7 @@ export const Home: React.FunctionComponent = () => {
     return selection.length > 0 ? selection : [value];
   };
 
-  const {
-    isOpen,
-    closeMenu,
-    getMenuProps,
-    getInputProps,
-    highlightedIndex,
-    getItemProps,
-  } = useCombobox({
+  const { isOpen, closeMenu, getMenuProps, getInputProps, highlightedIndex, getItemProps } = useCombobox({
     inputValue: searchedIngredient,
     items: selectableIngredients,
     defaultHighlightedIndex: 0, // after selection, highlight the first item.
@@ -195,7 +188,7 @@ export const Home: React.FunctionComponent = () => {
         const whereClause = where(
           "search",
           "array-contains-any",
-          [nameInput.value.toLowerCase(), ...selectedCategories].filter(Boolean)
+          [normalizeName(nameInput.value), ...selectedCategories].filter(Boolean)
         );
         first = query(ref, whereClause, orderBy("name"), limit(LIMIT), startAfter(paginate));
       } else {
