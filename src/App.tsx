@@ -10,6 +10,7 @@ import { RecipeProvider } from "./RecipeProvider";
 import { Admin } from "./AdminPage/Admin";
 import { getAuth } from "firebase/auth";
 import { Connexion } from "./Connexion/Connexion";
+import { logout } from "./firebase/configuration";
 
 const auth = getAuth();
 
@@ -43,7 +44,14 @@ export class App extends Component<{}, IAppState> {
       user: fakeUser || auth.currentUser
     };
 
-    auth.onAuthStateChanged(user => this.setState({ user: fakeUser || user || null }));
+    auth.onAuthStateChanged(user => {
+      if (user?.uid === "nLkRYqLLuThdLvdzoPjxr818bxu2" || user?.uid === "2ZtCDixdMuORBuXJSni620UJV1o1") {
+        this.setState({ user: fakeUser || user });
+      } else {
+        logout();
+        this.setState({ user: null });
+      }
+    });
   }
 
   public render() {
@@ -98,14 +106,24 @@ export class App extends Component<{}, IAppState> {
                     <Admin />
                   </Route>
                   <Route path="/recipe/:id">
-                    <Recipe />
+                    <Recipe readOnly={false} />
+                  </Route>
+                  <Route path="/view/:id">
+                    <Recipe readOnly />
                   </Route>
                   <Route>
                     <Home />
                   </Route>
                 </Switch>
               ) : (
-                <div className="h-64 flex items-center justify-center">Please login</div>
+                <Switch>
+                  <Route path="/view/:id">
+                    <Recipe readOnly />
+                  </Route>
+                  <Route>
+                    <div className="h-64 flex items-center justify-center">Please login</div>
+                  </Route>
+                </Switch>
               )}
               <footer className="h-20 bg-purple-900 text-white" />
             </RecipeProvider>

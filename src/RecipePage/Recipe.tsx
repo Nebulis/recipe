@@ -1,7 +1,7 @@
 import React, { FunctionComponent, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { RecipeIngredient, RecipeWithIngredient, Status, Unit } from "../type";
-import { Bolt, Clock, Lock, LockOpen, Oven, Pause, Plus, Save, Spinner, Times, User } from "../icon";
+import { Bolt, Clock, Link, Lock, LockOpen, Oven, Pause, Plus, Save, Spinner, Times, User } from "../icon";
 import { categories, transformTime, transformUnit, units, wait } from "../utils";
 import { RecipeContext } from "../RecipeProvider";
 import { Input, Select, Textarea, useInput } from "../Common/Input";
@@ -310,7 +310,7 @@ const EditableImage: FunctionComponent<{
 };
 
 const createRandomId = () => `${Date.now()}-${Math.random() * 100000000 + 1}`;
-export const Recipe: React.FunctionComponent = () => {
+export const Recipe: React.FunctionComponent<{ readOnly: boolean }> = ({ readOnly }) => {
   const params = useParams<{ id: string }>();
   const { loadRecipe, getRecipe, updateRecipe, updateIngredient, deleteIngredient, addIngredient } = useContext(
     RecipeContext
@@ -366,21 +366,31 @@ export const Recipe: React.FunctionComponent = () => {
                 });
               }}
             />
-            {edit ? (
-              <LockOpen
-                className="absolute w-6 h-6 text-black right-0 top-0 mt-1 cursor-pointer"
+            <div className="absolute right-0 top-0 mt-1 flex gap-2">
+              {!readOnly && edit ? (
+                <LockOpen
+                  className="w-6 h-6 text-black cursor-pointer"
+                  onClick={() => {
+                    setEdit(false);
+                  }}
+                />
+              ) : !readOnly && !edit ? (
+                <Lock
+                  className="w-6 h-6 text-black cursor-pointer"
+                  onClick={() => {
+                    setEdit(true);
+                  }}
+                />
+              ) : (
+                undefined
+              )}
+              <Link
+                className="w-6 h-6 text-black cursor-pointer"
                 onClick={() => {
-                  setEdit(false);
+                  navigator.clipboard.writeText(`${window.location.host}/view/${params.id}`);
                 }}
               />
-            ) : (
-              <Lock
-                className="absolute w-6 h-6 text-black right-0 top-0 mt-1 cursor-pointer"
-                onClick={() => {
-                  setEdit(true);
-                }}
-              />
-            )}
+            </div>
           </h1>
           <div className="mb-6">
             <EditableImage
