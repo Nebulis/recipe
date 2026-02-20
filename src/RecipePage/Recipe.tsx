@@ -400,8 +400,11 @@ export const Recipe: React.FunctionComponent<{ readOnly: boolean }> = ({ readOnl
                 const paths = recipe.imageUrl.split("/");
                 const key = paths[paths.length - 1];
                 // upload :)
-                await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload/${key}`, {
-                  method: "DELETE",
+                const deleteData = new FormData();
+                deleteData.append("key", key);
+                await fetch(`/.netlify/functions/delete`, {
+                  method: "POST",
+                  body: deleteData,
                   headers: {
                     Accept: "application/json"
                   }
@@ -413,7 +416,7 @@ export const Recipe: React.FunctionComponent<{ readOnly: boolean }> = ({ readOnl
                 });
                 const data = new FormData();
                 data.append("file", file);
-                const imageUrl = await fetch(`https://us-central1-recipes-ebe53.cloudfunctions.net/upload`, {
+                const imageUrl = await fetch(`/.netlify/functions/upload`, {
                   method: "POST",
                   body: data,
                   headers: {

@@ -1,5 +1,4 @@
 import AWS from "aws-sdk";
-import { log } from "console";
 import { v4 as uuid } from "uuid";
 
 const s3 = new AWS.S3({
@@ -29,26 +28,7 @@ export default async (req: Request) => {
     const data = await s3.upload(params).promise();
     return new Response(JSON.stringify({ url: data.Location }));
   } catch (error) {
-    console:log({error})
+    console.log({error})
     return new Response(JSON.stringify({ message: "Unable to save the file" }), { status: 500 });
   }
 };
-
-// app.delete("/:id", (req: any, res: any) => {
-//   const params: AWS.S3.DeleteObjectRequest = {
-//     Bucket,
-//     Key: req.params.id
-//   };
-//   s3.deleteObject(params)
-//     .promise()
-//     .then((data: any) => {
-//       console.log(data);
-//       res.json({ message: "ok" });
-//     })
-//     .catch((e: any) => {
-//       console.error(e);
-//       res.status(500).json(e);
-//     });
-// });
-
-// exports.upload = functions.https.onRequest(app);
