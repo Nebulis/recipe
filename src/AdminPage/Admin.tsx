@@ -229,7 +229,7 @@ export const Admin = () => {
               });
 
               // add TO to the list
-              if (!ingredientToSnapshot.exists) {
+              if (!ingredientToSnapshot.exists()) {
                 batch.update(doc(database, INGREDIENTS_LIST_COLLECTION, "ingredients"), {
                   value: arrayUnion(to)
                 });
