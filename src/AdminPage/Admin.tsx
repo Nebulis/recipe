@@ -245,7 +245,7 @@ export const Admin = () => {
                 })
                 .catch(error => {
                   setStatus("ERROR");
-                  setError(error);
+                  setError(error as string);
                 });
             }}
           >
