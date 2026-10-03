@@ -272,21 +272,38 @@ export const Admin = () => {
             } as Recipe;
           });
 
-          const batch = writeBatch(database);
-          for (const recipe of allRecipes) {
-            batch.update(doc(database, RECIPES_COLLECTION, recipe.id), {
-              search: generateSearch(recipe.name, recipe.categories)
-            });
-          }
-          batch
-            .commit()
-            .then(() => {
+          // Define Firestore's maximum batch limit
+          const BATCH_LIMIT = 100;
+
+          async function runBatchedUpdates() {
+            try {
+              // Loop through recipes in increments of 500
+              for (let i = 0; i < allRecipes.length; i += BATCH_LIMIT) {
+                console.log("Batch " + i):
+                const chunk = allRecipes.slice(i, i + BATCH_LIMIT);
+                const batch = writeBatch(database);
+          
+                for (const recipe of chunk) {
+                  const docRef = doc(database, RECIPES_COLLECTION, recipe.id);
+                  batch.update(docRef, {
+                    search: generateSearch(recipe.name, recipe.categories)
+                  });
+                }
+          
+                // Wait for the current batch to completely finish before starting the next
+                await batch.commit();
+              }
+              
+              // Set success only after all batches finish executing
               setStatus("SUCCESS");
-            })
-            .catch(error => {
+            } catch (error) {
               setStatus("ERROR");
               setError(error);
-            });
+            }
+          }
+          
+          // Execute the async batch process
+          runBatchedUpdates();
         }}
       >
         Update search
