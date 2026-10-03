@@ -298,7 +298,7 @@ export const Admin = () => {
               setStatus("SUCCESS");
             } catch (error) {
               setStatus("ERROR");
-              setError(error);
+              setError(error as string);
             }
           }
           
