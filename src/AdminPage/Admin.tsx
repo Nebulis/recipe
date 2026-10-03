@@ -279,7 +279,7 @@ export const Admin = () => {
             try {
               // Loop through recipes in increments of 500
               for (let i = 0; i < allRecipes.length; i += BATCH_LIMIT) {
-                console.log("Batch " + i):
+                console.log("Batch " + i);
                 const chunk = allRecipes.slice(i, i + BATCH_LIMIT);
                 const batch = writeBatch(database);
           
