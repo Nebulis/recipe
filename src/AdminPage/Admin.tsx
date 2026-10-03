@@ -273,7 +273,7 @@ export const Admin = () => {
           });
 
           // Define Firestore's maximum batch limit
-          const BATCH_LIMIT = 50;
+          const BATCH_LIMIT = 30;
 
           async function runBatchedUpdates() {
             try {
@@ -285,8 +285,10 @@ export const Admin = () => {
           
                 for (const recipe of chunk) {
                   const docRef = doc(database, RECIPES_COLLECTION, recipe.id);
+                  const search = generateSearch(recipe.name, recipe.categories);
+                  console.log({search});
                   batch.update(docRef, {
-                    search: generateSearch(recipe.name, recipe.categories)
+                    search
                   });
                 }
           
