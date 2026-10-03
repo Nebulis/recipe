@@ -75,10 +75,13 @@ export const generateSearch = (value: string, categories: string[]): string[] =>
     .flat();
 
   const searchesByNameParts = [];
-  for (let i = 3; i <= normalizedName.length; i++) {
-    searchesByNameParts.push(normalizedName.substring(0, i));
+  for (let j = 0; j <= normalizedName.length - 3; j++) {
+    for (let i = j+3; i <= normalizedName.length; i++) {
+      searchesByNameParts.push(normalizedName.substring(j, i));
+    }
   }
-  return [...searchesByWords, ...categories.map(normalizeCategory), ...searchesByNameParts];
+  const allResults = [...searchesByWords, ...categories.map(normalizeCategory), ...searchesByNameParts];
+  return [...new Set(allResults)]
 };
 
 export const normalize = (value: string) =>
