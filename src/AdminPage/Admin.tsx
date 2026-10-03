@@ -273,7 +273,7 @@ export const Admin = () => {
           });
 
           // Define Firestore's maximum batch limit
-          const BATCH_LIMIT = 100;
+          const BATCH_LIMIT = 50;
 
           async function runBatchedUpdates() {
             try {
